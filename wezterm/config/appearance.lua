@@ -7,7 +7,7 @@ local G = require("wezterm").GLOBAL
 local Config = {}
 
 Config.color_schemes = color.get_schemes()
-Config.color_scheme = color.get_sheme()
+Config.color_scheme = color.get_scheme()
 
 local theme = Config.color_schemes[Config.color_scheme]
 
