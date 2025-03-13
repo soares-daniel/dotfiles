@@ -9,10 +9,10 @@ copy_files() {
     DEST="$2"
     if [ -d "$SRC" ]; then
         echo "Copying directory: $SRC to $DEST"
-        cp -r "$SRC" "$DEST"
+        cp -ru "$SRC" "$DEST"  # -r: recursive, -u: update only if newer
     elif [ -f "$SRC" ]; then
         echo "Copying file: $SRC to $DEST"
-        cp "$SRC" "$DEST"
+        cp -u "$SRC" "$DEST"
     else
         echo "Source $SRC does not exist"
     fi
@@ -27,13 +27,9 @@ if grep -qEi "(microsoft|wsl)" /proc/version &>/dev/null; then
         if [ -d "$dir" ]; then
             dir_name=$(basename "$dir")
 
-            # Check if the target directory exists, and copy if it doesn't
-            if [ -d "$HOME/.config/$dir_name" ] || [ -f "$HOME/.config/$dir_name" ]; then
-                echo "Skipping $dir_name, already exists."
-            else
-                echo "Copying directory $dir_name to $HOME/.config/$dir_name"
-                copy_files "$dir" "$HOME/.config/$dir_name"
-            fi
+            # Copy files even if target directory exists
+            echo "Copying directory $dir_name to $HOME/.config/$dir_name"
+            copy_files "$dir" "$HOME/.config/"
         fi
     done
 
@@ -48,13 +44,9 @@ else
             if [ -d "$dir" ]; then
                 dir_name=$(basename "$dir")
 
-                # Check if the target directory exists, and copy if it doesn't
-                if [ -d "$HOME/.config/$dir_name" ] || [ -f "$HOME/.config/$dir_name" ]; then
-                    echo "Skipping $dir_name, already exists."
-                else
-                    echo "Copying directory $dir_name to $HOME/.config/$dir_name"
-                    copy_files "$dir" "$HOME/.config/$dir_name"
-                fi
+                # Copy files even if target directory exists
+                echo "Copying directory $dir_name to $HOME/.config/$dir_name"
+                copy_files "$dir" "$HOME/.config/"
             fi
         done
 

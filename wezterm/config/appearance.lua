@@ -63,9 +63,10 @@ Config.visual_bell = {
 
 ---window appearance
 Config.window_padding = { left = 2, right = 2, top = 2, bottom = 1 }
-Config.integrated_title_button_alignment = "Right"
-Config.integrated_title_button_style = "Windows"
-Config.integrated_title_buttons = { "Hide", "Maximize", "Close" }
+--Config.integrated_title_button_alignment = "Right"
+--Config.integrated_title_button_style = "Windows"
+--Config.integrated_title_buttons = { "Hide", "Maximize", "Close" }
+Config.window_decorations = "RESIZE"
 
 ---exit behavior
 Config.clean_exit_codes = { 130 }
