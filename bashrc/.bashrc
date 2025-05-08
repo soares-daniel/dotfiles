@@ -11,7 +11,7 @@ then
     PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 fi
 export PATH
-export PATH=$PATH:/home/soaresda/.cargo/bin
+export PATH=$PATH:/home/d.a.soares/.cargo/bin
 
 # Maven/Java
 alias mci="mvn clean install"
@@ -27,16 +27,16 @@ alias mciskip11="mci11 -DskipTests"
 alias mciskip17="mci17 -DskipTests"
 
 # Project
-alias cddf="cd ~/softdev/code/ics2-ssa-data-factory"
-alias cdportal="cd ~/softdev/code/ics2-ssa-portal/ics2-ssa-dev-utils && source ics2-ssa-installation-scripts.sh && cd .."
-alias gossaproject="cd ~/softdev/code/ics2-ssa-portal"
-alias cdansible="cd ~/softdev/code/ansible-common"
+alias cddf="cd ~/../../EDF/softdev/code/ics2-ssa-data-factory"
+alias cdportal="cd ~/../../EDF/softdev/code/ics2-ssa-portal/ics2-ssa-dev-utils && source ics2-ssa-installation-scripts.sh && cd .."
+alias gossaproject="cd ~/../../EDF/softdev/code/ics2-ssa-portal"
+alias cdansible="cd ~/../../EDF/softdev/code/ansible-common"
 alias ansiblenv="cdansible && cd ./VMs/env-docker"
 alias ansiblestart="ansiblenv && git pull && ./10_env.sh start"
 alias ansiblestop="ansiblenv && ./10_env.sh stop"
-alias cddatafactory="cd ~/softdev/code/ics2-ssa-data-factory"
-alias cddatalabdesign="cd ~/softdev/code/ics2-ssa-data-lab-design"
-alias cddatalabtools="cd ~/softdev/code/ics2-ssa-data-lab-tools"
+alias cddatafactory="cd ~/../../EDF/softdev/code/ics2-ssa-data-factory"
+alias cddatalabdesign="cd ~/../../EDF/softdev/code/ics2-ssa-data-lab-design"
+alias cddatalabtools="cd ~/../../EDF/softdev/code/ics2-ssa-data-lab-tools"
 
 # k9s
 alias k9s-dev='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-dev-eks --profile softdev-admin && kubectl config set clusters.arn:aws:eks:eu-west-1:431273878438:cluster/d-ew1-ics2-ssa-ssa-dev-eks.proxy-url socks5://localhost:1080'
@@ -82,7 +82,7 @@ alias preview="fzf --preview 'bat --style=numbers --color=always --line-range :5
 alias cpreview="preview | xargs code"
 
 eval "$(starship init bash)"
-export PATH="/home/soaresda/softdev/internal-tools/setup-dev-env/bin:${PATH}"
+export PATH="/home/d.a.soares/softdev/internal-tools/setup-dev-env/bin:${PATH}"
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
