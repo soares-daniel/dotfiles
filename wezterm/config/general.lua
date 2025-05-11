@@ -3,8 +3,11 @@ local fs = require("utils.fn").fs
 
 local Config = {}
 
+local GIT_PATH = "C:\\Users\\d.a.soares\\AppData\\Local\\Programs\\Git\\bin\\bash.exe"
+
 if fs.platform().is_win then
-    Config.default_prog = { "C:\\Program Files\\Git\\bin\\sh.exe", "--login" }
+    Config.default_prog = { GIT_PATH, "--login" }
+    Config.default_cwd = fs.home()
 
   Config.launch_menu = {
     {
@@ -18,31 +21,22 @@ if fs.platform().is_win then
       },
       cwd = "~",
     },
-    {
-      label = Icons.Progs["pwsh.exe"] .. " PowerShell V5",
-      args = { "powershell" },
-      cwd = "~",
-    },
     { label = "Command Prompt", args = { "cmd.exe" }, cwd = "~" },
-    { label = Icons.Progs["git"] .. " Git bash", args = { "C:\\Program Files\\Git\\bin\\sh.exe", "--login" }, cwd = "~" },
+    {
+        label = Icons.Progs["git"] .. " Git bash",
+        args = { GIT_PATH, "--login" },
+        cwd = "~"
+    },
+    {
+      label = "Project",
+      args = { GIT_PATH, "--login" },
+      cwd = "~/EDF/softdev/code/ics2-ssa-portal"
+    }
+
   }
 
   -- ref: https://wezfurlong.org/wezterm/config/lua/WslDomain.html
-  Config.wsl_domains = {
-    {
-      name = "WSL:Ubuntu",
-      distribution = "Ubuntu",
-      username = "sravioli",
-      default_cwd = "~",
-      default_prog = { "bash", "-i", "-l" },
-    },
-    {
-      name = "WSL:Alpine",
-      distribution = "Alpine",
-      username = "sravioli",
-      default_cwd = "/home/sravioli",
-    },
-  }
+
 end
 
 Config.default_cwd = fs.home()
