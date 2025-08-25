@@ -21,6 +21,7 @@ alias gossaproject="cdsoftdevcode && cd ./ics2-ssa-portal"
 alias cddatafactory="cdsoftdevcode && cd ./ics2-ssa-data-factory"
 alias cddatalabdesign="cdsoftdevcode && cd ./ics2-ssa-data-lab-design"
 alias cddatalabtools="cdsoftdevcode && cd ./ics2-ssa-data-lab-tools"
+alias cddatalabaudit="cdsoftdevcode && cd ./ics2-ssa-data-lab-audit"
 
 alias ls="eza --color=always --group-directories-first --icons"
 alias ll="eza -la --icons --octal-permissions --group-directories-first"
@@ -46,9 +47,29 @@ alias stowdotfiles="cddotfiles && ./setup.sh && cd -"
 alias preview="fzf --preview 'bat --style=numbers --color=always --line-range :500 {}'"
 alias cpreview="preview | xargs code"
 
+# k9s
+alias k9s-dev1='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-dev1-eks --profile softdev-admin'
+alias k9s-dev2='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-dev2-eks --profile softdev-admin'
+alias k9s-dev3='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-dev3-eks --profile softdev-admin'
+alias k9s-dev4='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-dev4-eks --profile softdev-admin'
+alias k9s-dev5='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-dev5-eks --profile softdev-admin'
+alias k9s-devops='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-devops-eks --profile softdev-admin'
+alias k9s-arch='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-arch-eks --profile softdev-admin'
+alias k9s-prod='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-prod-eks --profile softdev-admin'
+alias k9s-pgs1='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-pgs1-eks --profile softdev-admin'
+alias k9s-int='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ics2-int-eks --profile softdev-admin'
+alias mfa='~/.aws/mfa.sh'
+
 eval "$(starship init bash)"
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
+
+# Load Angular CLI autocompletion.
+source <(ng completion script)
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # --- Environment-Specific Configurations ---
 
@@ -75,22 +96,7 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
     # Project (Windows Path)
     alias cdsoftdevcode="cd /c/EDF/softdev/code"
 
-    # k9s (Assuming this is used in Windows Git Bash, if not, move to WSL section)
-    alias k9s-dev='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-dev-eks --profile softdev-admin && kubectl config set clusters.arn:aws:eks:eu-west-1:431273878438:cluster/d-ew1-ics2-ssa-ssa-dev-eks.proxy-url socks5://localhost:1080'
-    alias k9s-dev2='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-dev2-eks --profile softdev-admin && kubectl config set clusters.arn:aws:eks:eu-west-1:431273878438:cluster/d-ew1-ics2-ssa-ssa-dev2-eks.proxy-url socks5://localhost:1080'
-    alias k9s-dev3='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-dev3-eks --profile softdev-admin && kubectl config set clusters.arn:aws:eks:eu-west-1:431273878438:cluster/d-ew1-ics2-ssa-ssa-dev3-eks.proxy-url socks5://localhost:1080'
-    alias k9s-dev4='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-dev4-eks --profile softdev-admin && kubectl config set clusters.arn:aws:eks:eu-west-1:431273878438:cluster/d-ew1-ics2-ssa-ssa-dev4-eks.proxy-url socks5://localhost:1080'
-    alias k9s-dev5='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-dev5-eks --profile softdev-admin && kubectl config set clusters.arn:aws:eks:eu-west-1:431273878438:cluster/d-ew1-ics2-ssa-ssa-dev5-eks.proxy-url socks5://localhost:1080'
-    alias k9s-dev6='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-dev6-eks --profile softdev-admin && kubectl config set clusters.arn:aws:eks:eu-west-1:431273878438:cluster/d-ew1-ics2-ssa-ssa-dev6-eks.proxy-url socks5://localhost:1080'
-    alias k9s-dev7='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-dev7-eks --profile softdev-admin && kubectl config set clusters.arn:aws:eks:eu-west-1:431273878438:cluster/d-ew1-ics2-ssa-ssa-dev7-eks.proxy-url socks5://localhost:1080'
-    alias k9s-hf='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ssa-hf-eks --profile softdev-admin && kubectl config set clusters.arn:aws:eks:eu-west-1:431273878438:cluster/d-ew1-ics2-ssa-ssa-hf-eks.proxy-url socks5://localhost:1080'
-    alias k9s-int='aws eks update-kubeconfig --region eu-west-1 --name d-ew1-ics2-ssa-ics2-int-eks --profile softdev-admin && kubectl config set clusters.arn:aws:eks:eu-west-1:431273878438:cluster/d-ew1-ics2-ssa-ics2-int-eks.proxy-url socks5://localhost:1080'
-    alias mfa='~/.aws/mfa.sh'
-
     alias cddotfiles="cd /c/EDF/code/dotfiles"
-    alias sb="source ~/.config/bashrc/.bashrc"
-
-    source <(ng completion script)
 
 elif [[ "$OSTYPE" == "linux-gnu" ]]; then
     # --- Bash in WSL (Ubuntu/Alpine) Specific ---
@@ -102,7 +108,7 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
     . "$HOME/.cargo/env"
 
     # Project (WSL Paths)
-    alias cdsoftdevcode="cd /mnt/c/EDF/softdev/code"
+    alias cdsoftdevcode="cd ~/softdev/code"
     alias cdansible="cdsoftdevcode && cd ./ansible-common"
     alias ansiblenv="cdansible && cd ./VMs/env-docker"
     alias ansiblestart="ansiblenv && git pull && ./10_env.sh start"
@@ -115,8 +121,21 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
     alias dl="docker ps -l -q"
     alias dx="docker exec -it"
 
-    alias cddotfiles="cd /mnt/c/EDF/code/dotfiles"
-    alias sb="source /mnt/c/Users/d.a.soares/.config/bashrc/.bashrc"
+    alias cddotfiles="cd /mnt/c/EDF/code/dotfiles && git pull"
+
+    alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock wagoodman/dive"
+    alias start_using_aws_vpn="export http_proxy=http://127.0.0.1:1081/ && \
+                       export https_proxy=http://127.0.0.1:1081/ && \
+                       export HTTP_PROXY=http://127.0.0.1:1081/ && \
+                       export HTTPS_PROXY=http://127.0.0.1:1081/ && \
+                       export ALL_PROXY=socks5h://127.0.0.1:1080/"
+    alias stop_using_vpn="export http_proxy= && \
+                       export https_proxy= && \
+                       export HTTP_PROXY= && \
+                       export HTTPS_PROXY= && \
+                       export ALL_PROXY="
+
+    complete -C /usr/bin/terraform terraform
 
 fi
 

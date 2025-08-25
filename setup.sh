@@ -27,6 +27,12 @@ if grep -qEi "(microsoft|wsl)" /proc/version &>/dev/null; then
 
     # Loop through all directories in the dotfiles repo
     for dir in "$REPO_DIR"/*; do
+
+        if [ "$dir_name" == "bashrc" ]; then
+            echo "Copying bashrc to $HOME/.bashrc"
+            copy_files "$dir/.bashrc" "$HOME/.bashrc"
+        fi
+
         if [ -d "$dir" ]; then
             dir_name=$(basename "$dir")
 
@@ -53,6 +59,11 @@ else
 
         # Loop through all directories in the dotfiles repo
         for dir in "$REPO_DIR"/*; do
+            if [ "$dir_name" == "bashrc" ]; then
+                echo "Copying bashrc to $HOME/.bashrc"
+                copy_files "$dir/.bashrc" "$HOME/.bashrc"
+            fi
+
             if [ -d "$dir" ]; then
                 dir_name=$(basename "$dir")
 
