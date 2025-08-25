@@ -13,6 +13,7 @@ fi
 export PATH
 
 # --- Common Configurations (apply to both Git Bash and WSL) ---
+echo "Loading common configurations..."
 
 # Project
 alias cddf="cdsoftdevcode && cd ./ics2-ssa-data-factory"
@@ -64,12 +65,12 @@ eval "$(starship init bash)"
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
-# Load Angular CLI autocompletion.
-source <(ng completion script)
-
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# Load Angular CLI autocompletion.
+source <(ng completion script)
 
 # --- Environment-Specific Configurations ---
 
@@ -135,8 +136,10 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
                        export HTTPS_PROXY= && \
                        export ALL_PROXY="
 
+
     complete -C /usr/bin/terraform terraform
 
 fi
 
+echo "Environment setup complete."
 # --- End of Environment-Specific Configurations ---

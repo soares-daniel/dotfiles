@@ -27,15 +27,13 @@ if grep -qEi "(microsoft|wsl)" /proc/version &>/dev/null; then
 
     # Loop through all directories in the dotfiles repo
     for dir in "$REPO_DIR"/*; do
-
-        if [ "$dir_name" == "bashrc" ]; then
-            echo "Copying bashrc to $HOME/.bashrc"
-            copy_files "$dir/.bashrc" "$HOME/.bashrc"
-        fi
-
         if [ -d "$dir" ]; then
             dir_name=$(basename "$dir")
-
+            echo "Processing $dir_name"
+            if [ "$dir_name" == "bashrc" ]; then
+                echo "Copying bashrc to $HOME/.bashrc"
+                copy_files "$dir/.bashrc" "$HOME/.bashrc"
+            fi
             # Copy files
             echo "Copying directory $dir_name to $HOME/.config/"
             copy_files "$dir" "$HOME/.config/"
@@ -59,13 +57,13 @@ else
 
         # Loop through all directories in the dotfiles repo
         for dir in "$REPO_DIR"/*; do
-            if [ "$dir_name" == "bashrc" ]; then
-                echo "Copying bashrc to $HOME/.bashrc"
-                copy_files "$dir/.bashrc" "$HOME/.bashrc"
-            fi
-
             if [ -d "$dir" ]; then
                 dir_name=$(basename "$dir")
+                echo "Processing $dir_name"
+                if [ "$dir_name" == "bashrc" ]; then
+                    echo "Copying bashrc to $HOME/.bashrc"
+                    copy_files "$dir_name/.bashrc" "$HOME/.bashrc"
+                fi
 
                 # Copy files to ~/.config/
                 echo "Copying directory $dir_name to $HOME/.config/"
