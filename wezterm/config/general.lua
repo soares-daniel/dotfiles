@@ -4,7 +4,8 @@ local fs = require("utils.fn").fs
 local Config = {}
 
 if fs.platform().is_win then
-    Config.default_prog = { "C:\\Program Files\\Git\\bin\\sh.exe", "--login" }
+  Config.default_prog =
+    { "pwsh", "-NoLogo", "-ExecutionPolicy", "RemoteSigned", "-NoProfileLoadTime" }
 
   Config.launch_menu = {
     {
@@ -24,7 +25,7 @@ if fs.platform().is_win then
       cwd = "~",
     },
     { label = "Command Prompt", args = { "cmd.exe" }, cwd = "~" },
-    { label = Icons.Progs["git"] .. " Git bash", args = { "C:\\Program Files\\Git\\bin\\sh.exe", "--login" }, cwd = "~" },
+    { label = Icons.Progs["git"] .. " Git bash", args = { "sh", "-l" }, cwd = "~" },
   }
 
   -- ref: https://wezfurlong.org/wezterm/config/lua/WslDomain.html

@@ -57,3 +57,15 @@ else
         stow .
     fi
 fi
+
+# --- Link the main bashrc ---
+TARGET="$HOME/.bashrc"
+SOURCE="$HOME/.config/bashrc/.bashrc"
+
+if [ -e "$TARGET" ] && [ ! -L "$TARGET" ]; then
+  echo "⚠️  Found existing $TARGET (not a symlink). Backing up to $TARGET.bak"
+  mv "$TARGET" "$TARGET.bak"
+fi
+
+ln -sf "$SOURCE" "$TARGET"
+echo "✅ Linked $TARGET → $SOURCE"
