@@ -1,9 +1,6 @@
---target=~/.config
 --ignore=.stowrc
 --ignore=DS_Store
 --ignore=atuin/*
---ignore=bashrc
---ignore=zshrc
 --ignore=run
 --ignore=':Zone.Identifier$'
 --no-folding

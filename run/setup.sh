@@ -32,7 +32,7 @@ stow_pkg() {
 preflight_simulate() {
   local pkg="$1" target="$2"
   echo "Preflight (simulate): stow --target=\"$target\" $pkg"
-  if ! ( cd "$REPO_DIR" && stow -v 1 --target="$target" "$pkg" ) | tee /tmp/stow_simulate.out; then
+  if ! ( cd "$REPO_DIR" && stow -n -v 1 --target="$target" "$pkg" ) | tee /tmp/stow_simulate.out; then
     echo "ERROR: stow simulation failed."
     return 1
   fi
@@ -97,20 +97,20 @@ if [[ -d "$HOME/.config" ]]; then
   fi
 fi
 
-# Stow .config meta-package into $HOME (with --no-folding in .stowrc)
+# Stow .config meta-package into ~/.config
 if [[ -d "$REPO_DIR/.config" ]]; then
   echo "Stowing .config → ~/.config"
   mkdir -p "$HOME/.config"
 
   backup_common_blockers_in_config
 
-  if preflight_simulate ".config" "$HOME"; then
-    stow_pkg ".config" "$HOME"
+  if preflight_simulate ".config" "$HOME/.config"; then
+    stow_pkg ".config" "$HOME/.config"
   else
     echo "Attempting to back up common blockers and retry."
     backup_common_blockers_in_config
-    if preflight_simulate ".config" "$HOME"; then
-      stow_pkg ".config" "$HOME"
+    if preflight_simulate ".config" "$HOME/.config"; then
+      stow_pkg ".config" "$HOME/.config"
     else
       echo "ERROR: Conflicts remain. Please resolve the above conflicts and re-run."
       exit 1
@@ -118,21 +118,19 @@ if [[ -d "$REPO_DIR/.config" ]]; then
   fi
 fi
 
-# Stow homedir files (bashrc, zshrc) as separate packages
+# Now symlink bashrc, zshrc
 for pkg in bashrc zshrc; do
-  [[ -d "$REPO_DIR/$pkg" ]] || continue
-  case "$pkg" in
-    bashrc) backup_if_conflict "$HOME/.bashrc" ;;
-    zshrc)  backup_if_conflict "$HOME/.zshrc" ;;
-  esac
-  echo "Stowing $pkg → $HOME"
+  src="$HOME/.config/$pkg/.$pkg"
+  dest="$HOME/.$pkg"
 
-  if preflight_simulate "$pkg" "$HOME"; then
-    stow_pkg "$pkg" "$HOME"
-  else
-    echo "ERROR: Conflicts for $pkg. Resolve and re-run."
-    exit 1
+  if [[ ! -f "$src" ]]; then
+    echo "WARNING: Source file not found: $src — skipping."
+    continue
   fi
+
+  echo "Preparing symlink for $pkg → $dest"
+  backup_if_conflict "$dest"
+  ln -sfv "$src" "$dest"
 done
 
 echo "Symlink setup complete."

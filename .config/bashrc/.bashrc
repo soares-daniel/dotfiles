@@ -324,7 +324,7 @@ stowdotfiles() {
   local repo=~/code/dotfiles
   echo "📦 Stowing dotfiles from $repo"
   (
-    cd "$repo" || return
-    stow .
+    cd "$repo/run" || return
+    ./setup.sh
   )
 }
