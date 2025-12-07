@@ -25,11 +25,11 @@ Config.bold_brightens_ansi_colors = "BrightAndBold"
 ---char select and command palette
 Config.char_select_bg_color = theme.brights[6]
 Config.char_select_fg_color = theme.background
-Config.char_select_font_size = 14
+Config.char_select_font_size = 12
 
 Config.command_palette_bg_color = theme.brights[6]
 Config.command_palette_fg_color = theme.background
-Config.command_palette_font_size = 16
+Config.command_palette_font_size = 14
 Config.command_palette_rows = 20
 
 ---cursor
@@ -63,10 +63,9 @@ Config.visual_bell = {
 
 ---window appearance
 Config.window_padding = { left = 2, right = 2, top = 2, bottom = 1 }
---Config.integrated_title_button_alignment = "Right"
---Config.integrated_title_button_style = "Windows"
---Config.integrated_title_buttons = { "Hide", "Maximize", "Close" }
-Config.window_decorations = "RESIZE"
+Config.integrated_title_button_alignment = "Right"
+Config.integrated_title_button_style = "Windows"
+Config.integrated_title_buttons = { "Hide", "Maximize", "Close" }
 
 ---exit behavior
 Config.clean_exit_codes = { 130 }

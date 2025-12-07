@@ -253,7 +253,8 @@ e.set_right_status = function(Config, window, pane)
   if battery then
     battery.charge_lvl = battery.state_of_charge * 100
     battery.charge_lvl_round = mt.toint(mt.mround(battery.charge_lvl, 10))
-    battery.ico = icon.Bat[battery.state][tostring(battery.charge_lvl_round)]
+    local bat_icon_set = icon.Bat[battery.state] or icon.Bat.Discharging
+    battery.ico = bat_icon_set[tostring(battery.charge_lvl_round)]
     battery.lvl = tonumber(floor(battery.charge_lvl + 0.5)) .. "%"
     battery.full = ("%s %s"):format(battery.lvl, battery.ico)
     battery.cells = { battery.full, battery.lvl, battery.ico }

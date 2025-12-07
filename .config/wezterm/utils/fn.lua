@@ -514,39 +514,33 @@ end --~~ }}}
 ---end
 ---~~~
 M.fs.ls_dir = function(directory)
+  -- Ensure cache table exists but DO NOT return early (disable cache reading for debug)
   CACHE["read-dir"] = CACHE["read-dir"] or {}
   if CACHE["read-dir"][directory] then
     return CACHE["read-dir"][directory]
   end
 
-  local filename = M.fs.basename(directory) .. ".txt"
-  local cmd = "find %s -maxdepth 1 -type f > %s"
-  local tempfile = M.fs.pathconcat("/tmp", filename)
+  -- Use io.popen to capture output directly.
+  -- Redirect stderr to stdout (2>&1) to capture error messages.
+  local cmd = "find '%s' -maxdepth 1 \\( -type f -o -type l \\) 2>&1"
   if M.fs.is_win then
-    cmd = 'cmd /C "dir %s /B /S > %s"'
-    tempfile = M.fs.pathconcat(ogetenv "TEMP", filename)
+    cmd = 'cmd /C "dir %s /B /S 2>&1"'
   end
-  cmd = sformat(cmd, directory, tempfile)
+  cmd = sformat(cmd, directory)
 
   local files = {}
-  local file = ioopen(tempfile, "r")
-  if file then
-    for line in file:lines() do
-      files[#files + 1] = line
-    end
-    ioclose(file)
-  else
-    local success = oexec(cmd)
-    if not success then
-      return M.fs.log:error "[ls_dir] Unable to create temp file!"
-    end
-    file = ioopen(tempfile, "r")
-    if file then
-      for line in file:lines() do
-        files[#files + 1] = line
+  local pfile = io.popen(cmd)
+
+  if pfile then
+      for line in pfile:lines() do
+        -- Only add valid paths to the list (naive check for now)
+        if not line:find("find: ") and not line:find("No such file") then
+            files[#files + 1] = line
+        end
       end
-      ioclose(file)
-    end
+      pfile:close()
+  else
+      M.fs.log:error("Failed to run io.popen on %s", directory)
   end
 
   CACHE["read-dir"][directory] = files
