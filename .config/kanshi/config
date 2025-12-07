@@ -1,1 +1,18 @@
-../code/dotfiles/.config/kanshi/config
+# HOME: DP-2 4K center @120, DP-1 1440p above; laptop off (omit eDP-1)
+profile home_dual {
+  output eDP-1 disable
+  output DP-2 mode 3840x2160@119.999 position 0,0 scale 1
+  # center DP-1 over DP-2: (3840-2560)/2 = 640, y = -1440
+  output DP-1 mode 2560x1440@143.999 position 640,-1440 scale 1
+}
+
+# WORK: single 4K @60; laptop off (omit eDP-1)
+profile work_single {
+  output eDP-1 disable
+  output DP-2 mode 3840x2160@59.997 position 0,0 scale 1
+}
+
+# LAPTOP-ONLY: just eDP-1
+profile laptop_only {
+  output eDP-1 position 0,0 scale 1
+}
