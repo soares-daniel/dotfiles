@@ -111,3 +111,24 @@ eval "$(jenv init -)"
 # Python
 export PATH="$HOME/.pyenv/bin:$PATH"
 eval "$(pyenv init -)"
+
+
+# Load Angular CLI autocompletion.
+source <(ng completion script)
+
+# Add JBang to environment
+alias j!=jbang
+export PATH="$HOME/.jbang/bin:$PATH"
+
+
+export SDKMAN_DIR=$(brew --prefix sdkman-cli)/libexec
+[[ -s "${SDKMAN_DIR}/bin/sdkman-init.sh" ]] && source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+
+
+export AOC_SESSION=53616c7465645f5f876b94b69049f2f8bf54dff99b5f67648635a7784b42a352396c9b43e7316ecf4a6d27fc5b9c5aaf93898372361d85be557d41051203ece0
+
+# bun completions
+[ -s "/Users/sedam/.bun/_bun" ] && source "/Users/sedam/.bun/_bun"
+
+# Added by Antigravity
+export PATH="/Users/sedam/.antigravity/antigravity/bin:$PATH"
