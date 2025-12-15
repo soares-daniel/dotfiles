@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# ~/.local/bin/edge_override_pwa_launcher — Override Microsoft Edge PWA Launcher to use custom binary
+cd ~/.local/share/applications
+
+for f in msedge-*.desktop; do
+  # replace anything up to the first space after "Exec="
+  # keeping the rest of the command intact
+  sed -i "s|^Exec=[^ ]*|Exec=$HOME/.local/bin/edge|" "$f"
+done

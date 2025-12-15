@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# ~/.local/bin/edge — launch Edge with the current Sway scaling
+scale=$(swaymsg -t get_outputs | jq -r '.[] | select(.focused) | .scale')
+scale=${scale:-1}
+exec microsoft-edge --ozone-platform=wayland --force-device-scale-factor="$scale" "$@"

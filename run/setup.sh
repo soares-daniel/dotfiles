@@ -133,4 +133,29 @@ for pkg in bashrc zshrc; do
   ln -sfv "$src" "$dest"
 done
 
+# Stow .local (for bin scripts etc.) → ~/.local
+if [[ -d "$REPO_DIR/.local" ]]; then
+  echo "Stowing .local → ~/.local"
+  mkdir -p "$HOME/.local"
+
+  # Preflight simulation and stow
+  if preflight_simulate ".local" "$HOME/.local"; then
+    stow_pkg ".local" "$HOME/.local"
+  else
+    echo "Attempting backup and retry for .local"
+    if preflight_simulate ".local" "$HOME/.local"; then
+      stow_pkg ".local" "$HOME/.local"
+    else
+      echo "ERROR: Conflicts remain for .local. Resolve and re‑run."
+      exit 1
+    fi
+  fi
+fi
+
+# Ensure all scripts under ~/.local/bin are executable
+if [[ -d "$REPO_DIR/.local/bin" ]]; then
+  echo "Ensuring all scripts in ~/.local/bin are executable"
+  find "$REPO_DIR/.local/bin" -type f -exec chmod +x {} \;
+fi
+
 echo "Symlink setup complete."

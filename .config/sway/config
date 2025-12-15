@@ -33,15 +33,18 @@ set $right l
 
 # Start always
 exec_always dunst
-exec_always systemctl --user restart kanshi
+exec_always kanshi
 exec_always --no-startup-id ~/.config/sway/scripts/battery-low-notify.sh
 exec_always --no-startup-id ~/.config/sway/scripts/low_bat_notifier.sh
-
+exec_always --no-startup-id ~/.local/bin/edge_override_pwa_launcher
 # Terminal emulator
 set $term wezterm
 
 # Application launcher
 set $menu fuzzel
+
+# Browser
+set $browser edge
 
 include /etc/sway/config-vars.d/*
 
@@ -115,6 +118,9 @@ client.background n/a #1a1a1f n/a
     # Exit sway (logs you out of your Wayland session)
     #bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
     bindsym $mod+Shift+e exec wlogout
+
+    # Open browser (Note: Might need scale script in .local/bin if new browser, currently only supported for edge)
+    bindsym $mod+b exec ~/.local/bin/$browser
 #
 # Moving around:
 #
