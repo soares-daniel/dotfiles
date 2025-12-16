@@ -37,28 +37,29 @@
 },
 "clock": {
     "locale": "C",
-    "format": " {:%I:%M %p}",
-    "format-alt": " {:%a,%b %d}" // Icon: calendar-alt
+    "format": " {:%I:%M %p}",
+    "format-alt": " {:%a,%b %d}" // Icon: calendar-alt
 },
 "cpu": {
-    "format": "&#8239;{usage}%",
+    "format": " {usage}%",
     "tooltip": false,
     "on-click": "kitty -e 'htop'"
 },
 "memory": {
     "interval": 30,
-    "format": " {used:0.2f}GB",
+    "format": " {used:0.2f}GB",
     "max-length": 10,
     "tooltip": false,
     "warning": 70,
     "critical": 90
 },
+
 "network": {
   "interval": 2,
-  "format-wifi": " {signalStrength}%",
+  "format-wifi": " {signalStrength}%",
   "format-ethernet": "",
   "format-linked": " {ipaddr}",
-  "format-disconnected": " Disconnected",
+  "format-disconnected": " Disconnected",
   "format-disabled": "",
   "tooltip": false,
   "max-length": 20,
@@ -81,11 +82,11 @@
 },
 "pulseaudio": {
   // "scroll-step": 1, // %, can be a float
-  "format": "{icon} {volume}% {format_source}",
-  "format-bluetooth": "{icon} {volume}% {format_source}",
-  "format-bluetooth-muted": " {format_source}",
-  "format-muted": "  {format_source}",
-  "format-source": " {volume}%",
+  "format": "{icon} {volume}% {format_source}",
+  "format-bluetooth": "{icon} {volume}% {format_source}",
+  "format-bluetooth-muted": " {format_source}",
+  "format-muted": " {format_source}",
+  "format-source": " {volume}%",
   "format-source-muted": "",
   "format-icons": {
     "headphone": "",

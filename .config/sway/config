@@ -17,7 +17,7 @@ exec hash dbus-update-activation-environment 2>/dev/null && \
 # Auto floating for windows like Terminals started with Mod+Shift+Return
 #
 for_window [app_id="floating"] floating enable
-
+#for_window [app_id="AWS VPN Client"] inhibit_idle fullscreen disable
 #*****************************************************************
 
 ### Variables
@@ -63,6 +63,10 @@ bar {
   swaybar_command waybar
 }
 
+input * {
+    xkb_layout us
+    xkb_variant intl
+}
 
 #
 # Font, borders, and gaps

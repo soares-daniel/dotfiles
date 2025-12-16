@@ -49,3 +49,17 @@ window#waybar {
 #network {
     padding: 0 10px;
 }
+
+/* spacing between all modules on the bar */
+#cpu,
+#memory,
+#network,
+#pulseaudio,
+#backlight,
+#battery,
+#clock,
+#idle_inhibitor,
+#tray {
+    padding-left: 12px;
+    padding-right: 12px;
+}
