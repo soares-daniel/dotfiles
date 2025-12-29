@@ -1,0 +1,94 @@
+# ~/.zshrc.common: Shared configuration across all machines
+
+# Language environment
+export LANG=en_US.UTF-8
+
+# Editor (can be overridden in context-specific files)
+if command -v nvim >/dev/null 2>&1; then
+  export EDITOR=nvim
+  alias v=nvim
+elif command -v vim >/dev/null 2>&1; then
+  export EDITOR=vim
+  alias v=vim
+fi
+
+# Completion setup
+source <(kubectl completion zsh) 2>/dev/null || true
+complete -C '/usr/local/bin/aws_completer' aws 2>/dev/null || true
+
+# Git aliases
+alias gc="git commit -m"
+alias gca="git commit -a -m"
+alias gp="git push origin HEAD"
+alias gpu="git pull origin"
+alias gst="git status"
+alias glog="git log --graph --topo-order --pretty='%w(100,0,6)%C(yellow)%h%C(bold)%C(black)%d %C(cyan)%ar %C(green)%an%n%C(bold)%C(white)%s %N' --abbrev-commit"
+alias gdiff="git diff"
+alias gco="git checkout"
+alias gb='git branch'
+alias gba='git branch -a'
+alias gadd='git add'
+alias ga='git add -p'
+alias gcoall='git checkout -- .'
+alias gr='git remote'
+alias gre='git reset'
+
+# Docker aliases
+alias dco="docker compose"
+alias dps="docker ps"
+alias dpa="docker ps -a"
+alias dl="docker ps -l -q"
+alias dx="docker exec -it"
+
+# Directory navigation aliases
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias .....="cd ../../../.."
+alias ......="cd ../../../../.."
+
+# Eza aliases
+alias l="eza -l --icons --git -a"
+alias lt="eza --tree --level=2 --long --icons --git"
+alias ltree="eza --tree --level=2 --icons --git"
+alias la="eza --long --all --group --group-directories-first"
+alias ll="eza -la --icons --octal-permissions --group-directories-first"
+
+# FZF setup
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow'
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# Navigation functions
+cx() { cd "$@" && l; }
+fcd() { cd "$(find . -type d -not -path '*/.*' | fzf)" && l; }
+f() { echo "$(find . -type f -not -path '*/.*' | fzf)" | pbcopy }
+fv() { nvim "$(find . -type f -not -path '*/.*' | fzf)" }
+
+# XDG paths
+export XDG_CONFIG_HOME="$HOME/.config"
+export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
+
+# Dotfiles helpers
+alias cddotfiles="cd ~/code/dotfiles"
+stowdotfiles() {
+  local repo=~/code/dotfiles
+  echo "📦 Stowing dotfiles from $repo"
+  (
+    cd "$repo/run" || return
+    ./setup.sh
+  )
+}
+
+# System Update Helper (OS-agnostic)
+alias update='update-all'
+
+# Starship prompt
+eval "$(starship init zsh)"
+
+# Misc aliases
+alias la=tree
+alias cat=bat
+alias cl='clear'
+
+# Dev Tools CLI
+export PATH="$PATH:$HOME/.local/bin"

@@ -1,0 +1,213 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "🔄 System Update Script - OS Agnostic"
+echo "========================================"
+
+detect_os() {
+  if [[ "$(uname)" == "Darwin" ]]; then
+    echo "macOS"
+  elif [[ -f /etc/os-release ]]; then
+    source /etc/os-release
+    echo "$ID"
+  else
+    echo "unknown"
+  fi
+}
+
+detect_package_manager() {
+  local os="$1"
+  case "$os" in
+    ubuntu|debian)
+      echo "apt"
+      ;;
+    fedora|rhel|centos)
+      echo "dnf"
+      ;;
+    arch|manjaro)
+      echo "pacman"
+      ;;
+    opensuse*)
+      echo "zypper"
+      ;;
+    alpine)
+      echo "apk"
+      ;;
+    macos)
+      if command -v brew >/dev/null 2>&1; then
+        echo "brew"
+      else
+        echo "none"
+      fi
+      ;;
+    *)
+      echo "unknown"
+      ;;
+  esac
+}
+
+update_apt() {
+  echo "📦 Updating APT packages..."
+  sudo apt update -q
+  echo "⬆️  Performing full upgrade..."
+  sudo apt full-upgrade -y
+  echo "🧹 Cleaning up unused packages..."
+  sudo apt autoremove --purge -y
+  sudo apt autoclean -y
+
+  if command -v fwupdmgr >/dev/null 2>&1; then
+    echo "🔧 Checking for firmware updates..."
+    sudo fwupdmgr refresh --force
+    sudo fwupdmgr get-updates
+    read -p "Install firmware updates? (y/N) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      sudo fwupdmgr update -y
+    fi
+  fi
+}
+
+update_dnf() {
+  echo "📦 Updating DNF packages..."
+  sudo dnf upgrade --refresh -y
+  echo "🧹 Cleaning up..."
+  sudo dnf autoremove -y
+  sudo dnf clean all
+
+  if command -v fwupdmgr >/dev/null 2>&1; then
+    echo "🔧 Checking for firmware updates..."
+    sudo fwupdmgr refresh --force
+    sudo fwupdmgr get-updates
+    read -p "Install firmware updates? (y/N) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      sudo fwupdmgr update -y
+    fi
+  fi
+}
+
+update_pacman() {
+  echo "📦 Updating Pacman packages..."
+  sudo pacman -Syu --noconfirm
+  echo "🧹 Cleaning up..."
+  sudo pacman -Sc --noconfirm
+
+  if command -v fwupdmgr >/dev/null 2>&1; then
+    echo "🔧 Checking for firmware updates..."
+    sudo fwupdmgr refresh --force
+    sudo fwupdmgr get-updates
+    read -p "Install firmware updates? (y/N) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      sudo fwupdmgr update -y
+    fi
+  fi
+}
+
+update_zypper() {
+  echo "📦 Updating Zypper packages..."
+  sudo zypper refresh
+  sudo zypper dup -y
+  echo "🧹 Cleaning up..."
+  sudo zypper clean -a
+
+  if command -v fwupdmgr >/dev/null 2>&1; then
+    echo "🔧 Checking for firmware updates..."
+    sudo fwupdmgr refresh --force
+    sudo fwupdmgr get-updates
+    read -p "Install firmware updates? (y/N) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      sudo fwupdmgr update -y
+    fi
+  fi
+}
+
+update_apk() {
+  echo "📦 Updating APK packages..."
+  sudo apk update
+  sudo apk upgrade -a
+}
+
+update_brew() {
+  echo "📦 Updating Homebrew packages..."
+  brew update
+  brew upgrade
+  echo "🧹 Cleaning up..."
+  brew cleanup -s
+
+  if command -v softwareupdate >/dev/null 2>&1; then
+    echo "🍎 Checking for macOS system updates..."
+    softwareupdate --list
+    read -p "Install macOS updates? (y/N) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      sudo softwareupdate --install --all
+    fi
+  fi
+}
+
+update_flatpak() {
+  if command -v flatpak >/dev/null 2>&1; then
+    echo "📦 Updating Flatpak packages..."
+    flatpak update -y
+    echo "🧹 Cleaning up..."
+    flatpak uninstall --unused -y
+  fi
+}
+
+update_snap() {
+  if command -v snap >/dev/null 2>&1; then
+    echo "📦 Updating Snap packages..."
+    sudo snap refresh
+  fi
+}
+
+main() {
+  local os pm
+
+  os=$(detect_os)
+  pm=$(detect_package_manager "$os")
+
+  echo "Detected OS: $os"
+  echo "Package Manager: $pm"
+  echo ""
+
+  case "$pm" in
+    apt)
+      update_apt
+      ;;
+    dnf)
+      update_dnf
+      ;;
+    pacman)
+      update_pacman
+      ;;
+    zypper)
+      update_zypper
+      ;;
+    apk)
+      update_apk
+      ;;
+    brew)
+      update_brew
+      ;;
+    unknown)
+      echo "❌ Unknown package manager. Manual update required."
+      return 1
+      ;;
+    *)
+      echo "❌ No package manager found."
+      return 1
+      ;;
+  esac
+
+  echo ""
+  update_flatpak
+  update_snap
+
+  echo ""
+  echo "✅ System update completed."
+}
+
+main "$@"

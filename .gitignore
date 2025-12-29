@@ -3,3 +3,8 @@ tmux/plugins/
 raycast
 fzf
 history.txt
+.idea/
+
+# Local machine overrides (never tracked)
+bashrc/.bashrc.local
+zshrc/.zshrc.local

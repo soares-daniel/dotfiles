@@ -19,7 +19,14 @@ is_windows() { [[ "${OSTYPE:-}" == msys || "${OSTYPE:-}" == cygwin ]]; }
 
 backup_if_conflict() {
   local target="$1"
+  local basename
+  basename=$(basename "$target")
+  # Never backup .local files
+  if [[ "$basename" == *.local ]]; then
+    return 0
+  fi
   if [[ -e "$target" && ! -L "$target" ]]; then
+    echo "Backing up $target"
     mv -v "$target" "${target}.bak.$(date +%Y%m%d_%H%M%S)"
   fi
 }
@@ -131,6 +138,18 @@ for pkg in bashrc zshrc; do
   echo "Preparing symlink for $pkg → $dest"
   backup_if_conflict "$dest"
   ln -sfv "$src" "$dest"
+
+  # Create .local file if it doesn't exist
+  local_file="$HOME/.$pkg.local"
+  if [[ ! -f "$local_file" ]]; then
+    echo "# Local machine-specific customizations for $pkg" > "$local_file"
+    echo "# This file will never be overwritten by dotfiles setup" >> "$local_file"
+    echo "# Example aliases, environment variables, or function overrides:" >> "$local_file"
+    echo "" >> "$local_file"
+    echo "# Example: export MY_CUSTOM_VAR=value" >> "$local_file"
+    echo "# Example: alias myalias='command'" >> "$local_file"
+    echo "echo \"Created $local_file for customizations\""
+  fi
 done
 
 # Stow .local (for bin scripts etc.) → ~/.local

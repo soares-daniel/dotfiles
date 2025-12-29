@@ -14,5 +14,5 @@ profile work_single {
 
 # LAPTOP-ONLY: just eDP-1
 profile laptop_only {
-  output eDP-1 position 0,0 scale 1
+  output eDP-1 enable mode 1920x1080 position 0,0 scale 1
 }

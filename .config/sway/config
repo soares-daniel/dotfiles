@@ -17,6 +17,10 @@ exec hash dbus-update-activation-environment 2>/dev/null && \
 # Auto floating for windows like Terminals started with Mod+Shift+Return
 #
 for_window [app_id="floating"] floating enable
+for_window [title="(?i)^picture[- ]?in[- ]?picture$"] floating enable
+for_window [window_type="dialog"] floating enable
+for_window [window_type="utility"] floating enable
+for_window [window_role="pop-up"] floating enable
 #for_window [app_id="AWS VPN Client"] inhibit_idle fullscreen disable
 #*****************************************************************
 
@@ -31,9 +35,9 @@ set $down j
 set $up k
 set $right l
 
-# Start always
-exec_always dunst
-exec_always kanshi
+# Start
+exec dunst
+exec_always "systemctl --user restart kanshi.service"
 exec_always --no-startup-id ~/.config/sway/scripts/battery-low-notify.sh
 exec_always --no-startup-id ~/.config/sway/scripts/low_bat_notifier.sh
 exec_always --no-startup-id ~/.local/bin/edge_override_pwa_launcher
@@ -53,7 +57,7 @@ output * bg /usr/share/backgrounds/sway/black.jpeg fill
 
 ### Idle configuration
 # Lock screen after 300 seconds of inactivity ,then turn displays off after another 300 seconds. Lock screen before sleep
-exec_always swayidle -w \
+exec swayidle -w \
           timeout 300 'swaylock' \
           timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
           before-sleep 'swaylock'
@@ -250,21 +254,65 @@ bindsym $mod+Shift+b border toggle
     bindsym XF86MonBrightnessUp exec brightnessctl -c backlight set +5%
     bindsym XF86MonBrightnessDown exec brightnessctl -c backlight set 5%-
 
-#Screenshot
-##capture selected area to clipboard
-    bindsym $mod+Shift+p exec grim -g "$(slurp)" - | wl-copy && notify-send "Screenshot copied"
+# Start clipboard history
+exec wl-paste --type text --watch cliphist store
+exec wl-paste --type image --watch cliphist store
 
-##capture all screen to clipboard and saves
-    bindsym $mod+Print exec IMG=~/Pictures/screenshot_$(date +%Y%m%d_%H%M%S).png && grim $IMG && wl-copy < $IMG && notify-send "Screenshot saved"
+# Bind to see history using your existing fuzzel
+bindsym $mod+c exec cliphist list | fuzzel --dmenu | cliphist decode | wl-copy
 
-##capture selected area and saves
-    bindsym $mod+Shift+Print exec IMG=~/Pictures/screenshot_$(date +%Y%m%d_%H%M%S).png && grim -g "$(slurp)" $IMG && wl-copy < $IMG && notify-send "Screenshot saved"
+# Screenshot logic
+set $screenshot_dir ~/Pictures/screenshots
+exec mkdir -p $screenshot_dir
 
-#Screenrecord
-    set $screenrecord wf-recorder -g "$(slurp)" --audio=alsa_output.pci-0000_08_00.6.analog-stereo.monitor -f ~/Videos/record/mov-$(date +"%Y-%m-%d--%H-%M-%S.mp4")
-    bindsym $mod+v exec $screenrecord
-    bindsym $mod+BackSpace exec killall -s SIGINT wf-recorder; exec killall ffmpeg && notify-send "Recording Saved"
+set $mode_screenshot (a)rea, (w)indow, (o)utput, (s)creen | [Enter] Swappy
+mode "$mode_screenshot" {
+    # Area
+    bindsym a exec grimshot save area $screenshot_dir/$(date +%H%M%S).png | \
+        xargs -I {} dunstify -a "Sway" -h string:x-dunst-stack-tag:screenshot \
+        -i camera-photo "Screenshot Captured" "Area saved to {}" && \
+        swaymsg mode "default"
 
-#Audiorecord
-    set $audiorecord ffmpeg -f pulse -i alsa_output.pci-0000_00_1b.0.analog-stereo.monitor -ac 2 ~/Audio/aud-$(date +%Y%m%d_%H%M%S).mp3
-    bindsym $mod+a exec $audiorecord
+    # Window
+    bindsym w exec grimshot save active $screenshot_dir/$(date +%Y%m%d_%H%M%S).png | \
+        xargs -I {} dunstify -a "Sway" -h string:x-dunst-stack-tag:screenshot \
+        -i camera-photo "Window Captured" "Saved to {}" && \
+        swaymsg mode "default"
+
+    # Output
+    bindsym o exec grimshot save output $screenshot_dir/$(date +%Y%m%d_%H%M%S).png | \
+        xargs -I {} dunstify -a "Sway" -h string:x-dunst-stack-tag:screenshot \
+        -i camera-photo "Output Captured" "Saved to {}" && \
+        swaymsg mode "default"
+
+    # Screen
+    bindsym s exec grimshot save screen $screenshot_dir/$(date +%Y%m%d_%H%M%S).png | \
+        xargs -I {} dunstify -a "Sway" -h string:x-dunst-stack-tag:screenshot \
+        -i camera-photo "Screen Captured" "Saved to {}" && \
+        swaymsg mode "default"
+
+    # Swappy
+    bindsym Return exec grim -g "$(slurp)" - | swappy -f - && \
+        dunstify -a "Sway" -u low -i accessories-text-editor "Swappy" "Editor closed" && \
+        swaymsg mode "default"
+
+    # Exit
+    bindsym Escape mode "default"
+}
+bindsym $mod+Shift+p mode "$mode_screenshot"
+
+### Workspace assignment rules ###
+assign [app_id="microsoft-edge"] workspace number 1
+assign [app_id="org.wezfurlong.wezterm"] workspace number 2
+assign [app_id="jetbrains-idea"] workspace number 3
+assign [app_id="msedge-_cifhbcnohmdccbgoicgdjpfamggdegmo-Default"] workspace number 6
+
+### Autostart apps ###
+# Browser
+exec --no-startup-id microsoft-edge-stable
+# Terminal
+exec --no-startup-id wezterm
+# IntelliJ IDEA
+exec --no-startup-id idea
+# Teams PWA inside Edge profile
+exec --no-startup-id microsoft-edge-stable --app-id=_cifhbcnohmdccbgoicgdjpfamggdegmo

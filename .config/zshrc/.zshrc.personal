@@ -1,0 +1,59 @@
+# ~/.zshrc.personal: Personal configuration
+
+# GO
+export GOPATH="$HOME/go"
+
+# Add GOPATH to PATH if not already there
+if [[ ":$PATH:" != *":$GOPATH/bin:"* ]]; then
+  export PATH="$GOPATH/bin:$PATH"
+fi
+
+# HTTP requests with xh!
+alias http="xh"
+
+# VI Mode!!!
+bindkey jj vi-cmd-mode
+
+# NVM
+export NVM_DIR="$HOME/.nvm"
+if [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
+  . "/opt/homebrew/opt/nvm/nvm.sh"
+  [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
+fi
+
+# SDKMAN (via brew)
+if brew --prefix sdkman-cli >/dev/null 2>&1; then
+  export SDKMAN_DIR=$(brew --prefix sdkman-cli)/libexec
+  [[ -s "${SDKMAN_DIR}/bin/sdkman-init.sh" ]] && source "${SDKMAN_DIR}/bin/sdkman-init.sh"
+fi
+
+# Add JBang to environment
+alias j!=jbang
+export PATH="$HOME/.jbang/bin:$PATH"
+
+# bun completions
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# Atuin
+if [ -f "$HOME/.atuin/bin/env" ]; then
+  . "$HOME/.atuin/bin/env"
+fi
+
+# Zoxide
+eval "$(zoxide init zsh)"
+
+# Direnv
+eval "$(direnv hook zsh)"
+
+# Angular CLI autocompletion
+command -v ng >/dev/null 2>&1 && source <(ng completion script)
+
+# Homebrew paths (macOS only)
+if [[ "$(uname)" == "Darwin" ]]; then
+  export PATH="/opt/homebrew/bin:$PATH"
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+
+# Example: Personal project paths
+# projroot="$HOME/code/personal"
+# cdproj() { cd "$projroot/myproject" || return; }

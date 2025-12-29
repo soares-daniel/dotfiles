@@ -1,0 +1,180 @@
+# ~/.bashrc.common: Shared configuration across all machines
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+  . /etc/bashrc
+fi
+
+# If not running interactively, don't do anything
+case $- in
+*i*) ;;
+*) return ;;
+esac
+
+# don't put duplicate lines or lines starting with space in the history
+HISTCONTROL=ignoreboth
+shopt -s histappend
+HISTSIZE=1000
+HISTFILESIZE=2000
+shopt -s checkwinsize
+
+# make less more friendly for non-text input files
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# colored GCC warnings and errors
+GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01;quote=01'
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+  test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+  alias grep='grep --color=auto'
+  alias fgrep='fgrep --color=auto'
+  alias egrep='egrep --color=auto'
+fi
+
+# enable programmable completion features
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
+
+# User specific environment
+if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]; then
+  PATH="$HOME/.local/bin:$HOME/bin:$PATH"
+fi
+export PATH
+export PATH=$PATH:"$HOME/.cargo/bin"
+
+export XDG_CONFIG_HOME="$HOME/.config"
+export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
+export WEZTERM_CONFIG_FILE="$XDG_CONFIG_HOME/wezterm/wezterm.lua"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+if [ -d "/usr/local/go/bin" ]; then
+  PATH="/usr/local/go/bin:$PATH"
+  PATH="$HOME/go/bin:$PATH"
+fi
+
+# Safe source helper
+try_source() {
+  local name="$1" file="$2"
+  if [ -f "$file" ]; then
+    source "$file"
+  else
+    echo "[WARN] Optional component not found: $name ($file)"
+  fi
+}
+
+# Safe command check
+require_cmd() {
+  local cmd="$1"
+  command -v "$cmd" >/dev/null 2>&1 || {
+    echo "[ERROR] Required command '$cmd' not found in PATH."
+  }
+}
+
+check_optional() {
+  local cmd="$1"
+  local action="$2"
+  local label="${3:-$cmd}"
+
+  if command -v "$cmd" >/dev/null 2>&1; then
+    if [ -n "$action" ]; then
+      eval "$action"
+    fi
+  else
+    echo "[WARN] Optional component not found: ${label}"
+  fi
+}
+
+# Criticals
+require_cmd sdk
+require_cmd aws
+require_cmd mvn
+require_cmd docker
+require_cmd nvm
+require_cmd kubectl
+require_cmd go
+
+# Optionals
+check_optional fzf "" "fzf"
+check_optional ng 'source <(ng completion script)' "Angular CLI"
+check_optional starship 'eval "$(starship init bash)"' "Starship prompt"
+check_optional eza "" "eza"
+
+# Eza aliases
+alias ls="eza --color=always --group-directories-first --icons"
+alias ll="eza -la --icons --octal-permissions --group-directories-first"
+alias l="eza -bGF --header --git --color=always --group-directories-first --icons"
+alias llm="eza -lbGd --header --git --sort=modified --color=always --group-directories-first --icons"
+alias la="eza --long --all --group --group-directories-first"
+alias lx="eza -lbhHigUmuSa@ --time-style=long-iso --git --color-scale --color=always --group-directories-first --icons"
+alias lS="eza -1 --color=always --group-directories-first --icons"
+alias lt="eza --tree --level=2 --color=always --group-directories-first --icons"
+alias l.="eza -a | grep -E '^\.'"
+
+# Docker aliases
+alias dco="docker compose"
+alias dps="docker ps"
+alias dpa="docker ps -a"
+alias dl="docker ps -l -q"
+alias dx="docker exec -it"
+
+alias preview="fzf --preview 'bat --style=numbers --color=always --line-range :500 {}'"
+alias cpreview="preview | xargs zed"
+
+alias cl='clear'
+alias reload='source ~/.bashrc && echo "🔁 bashrc reloaded"'
+
+# Git aliases
+alias gc="git commit -m"
+alias gca="git commit -a -m"
+alias gp="git push origin HEAD"
+alias gpu="git pull origin"
+alias gst="git status"
+alias glog="git log --graph --topo-order --pretty='%w(100,0,6)%C(yellow)%h%C(bold)%C(black)%d %C(cyan)%ar %C(green)%an%n%C(bold)%C(white)%s %N' --abbrev-commit"
+alias gdiff="git diff"
+alias gco="git checkout"
+alias gb='git branch'
+alias gba='git branch -a'
+alias gadd='git add'
+alias ga='git add -p'
+alias gcoall='git checkout -- .'
+alias gr='git remote'
+alias gre='git reset'
+
+# Directory navigation aliases
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias .....="cd ../../../.."
+alias ......="cd ../../../../.."
+
+# Dotfiles helpers
+alias cddotfiles="cd ~/code/dotfiles"
+stowdotfiles() {
+  local repo=~/code/dotfiles
+  echo "📦 Stowing dotfiles from $repo"
+  (
+    cd "$repo/run" || return
+    ./setup.sh
+  )
+}
+
+# System Update Helper (OS-agnostic)
+alias update='update-all'
+
+# opencode
+export PATH=$HOME/.opencode/bin:$PATH
+
+# Dev Tools CLI
+export PATH="$PATH:$HOME/.local/bin"
