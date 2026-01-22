@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# Screen recording script for sway
+# Usage: MOD+SHIFT+R to toggle recording
+
+RECORDING_DIR="$HOME/Videos/recordings"
+PID_FILE="$HOME/.cache/sway-recording.pid"
+STATE_FILE="$HOME/.cache/sway-recording.state"
+
+mkdir -p "$RECORDING_DIR"
+mkdir -p "$(dirname "$PID_FILE")"
+
+# Check if recording is in progress
+if [ -f "$PID_FILE" ]; then
+    PID=$(cat "$PID_FILE")
+    if ps -p "$PID" > /dev/null 2>&1; then
+        # Stop recording
+        kill -INT "$PID"
+        wait "$PID" 2>/dev/null
+        rm -f "$PID_FILE"
+
+        # Get the last recording file
+        if [ -f "$STATE_FILE" ]; then
+            RECORDING_FILE=$(cat "$STATE_FILE")
+            rm -f "$STATE_FILE"
+            dunstify -a "Sway" -i camera-video "Recording Stopped" "Saved to $RECORDING_FILE"
+        else
+            dunstify -a "Sway" -i camera-video "Recording Stopped" "Check $RECORDING_DIR"
+        fi
+        exit 0
+    else
+        rm -f "$PID_FILE"
+        rm -f "$STATE_FILE"
+    fi
+fi
+
+# Start recording
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+OUTPUT_FILE="$RECORDING_DIR/recording_$TIMESTAMP.mp4"
+
+# Select area to record
+AREA=$(slurp)
+if [ -z "$AREA" ]; then
+    dunstify -a "Sway" -u normal "Recording Cancelled" "No area selected"
+    exit 1
+fi
+
+# Save recording file path
+echo "$OUTPUT_FILE" > "$STATE_FILE"
+
+# Start wf-recorder
+wf-recorder -g "$AREA" -f "$OUTPUT_FILE" &
+PID=$!
+echo "$PID" > "$PID_FILE"
+
+# Wait for the recording to start
+sleep 0.5
+
+if ps -p "$PID" > /dev/null 2>&1; then
+    dunstify -a "Sway" -u normal -i camera-video "Recording Started" "Press MOD+SHIFT+R to stop"
+else
+    rm -f "$PID_FILE"
+    rm -f "$STATE_FILE"
+    dunstify -a "Sway" -u critical "Recording Failed" "Could not start recording"
+    exit 1
+fi

@@ -21,3 +21,6 @@ DOTFILES_CONTEXT="personal"
 
 # Source local overrides (never tracked)
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+# Dev Tools CLI
+export PATH="$PATH:/home/d-a-soares/.local/bin"

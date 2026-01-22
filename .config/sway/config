@@ -192,6 +192,9 @@ client.background n/a #1a1a1f n/a
 
     # Swap focus between the tiling area and the floating area
     bindsym $mod+space focus mode_toggle
+
+    # Toggle screen recording
+    bindsym $mod+Shift+r exec ~/.local/bin/sway-record
 #
 # Scratchpad:
 #
@@ -304,7 +307,7 @@ bindsym $mod+Shift+p mode "$mode_screenshot"
 ### Workspace assignment rules ###
 assign [app_id="microsoft-edge"] workspace number 1
 assign [app_id="org.wezfurlong.wezterm"] workspace number 2
-assign [app_id="jetbrains-idea"] workspace number 3
+assign [app_id="jetbrains-idea" floating="no"] workspace number 3
 assign [app_id="msedge-_cifhbcnohmdccbgoicgdjpfamggdegmo-Default"] workspace number 6
 
 ### Autostart apps ###

@@ -58,45 +58,71 @@ alias mfa='~/.aws/mfa.sh'
 alias listjava='ls -1 ~/.sdkman/candidates/java'
 
 usejava() {
-  local ver_match
-  ver_match=$(ls ~/.sdkman/candidates/java | grep -m1 "$1")
-  if [ -z "$ver_match" ]; then
-    echo "No matching Java version found for: $1"
+  local pattern="$1" action="$2" tmp_java previous_java current_java_name current_version
+
+  if [ -z "$pattern" ]; then
+    echo "Usage:"
+    echo "  usejava <version>           # switch SDKMAN java version"
+    echo "  usejava <version> mvn ...   # run Maven command with that version"
     return 1
   fi
-  echo "Switching to Java version: $ver_match"
-  sdk use java "$ver_match" >/dev/null
-  java -version 2>&1 | head -n 2
-}
 
-mvnwith() {
-  local tmp_java previous_java
-  tmp_java=$(ls ~/.sdkman/candidates/java | grep -E -m1 "^$1(\.|$)")
+  # Resolve target Java path
+  tmp_java=$(find ~/.sdkman/candidates/java -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | grep -E -m1 "^${pattern}(\.|$)")
   if [ -z "$tmp_java" ]; then
-    echo "No matching Java version found for: $1"
+    echo "No matching Java version found for: $pattern"
     return 1
   fi
 
-  previous_java=$(readlink ~/.sdkman/candidates/java/current)
-  echo "Temporarily using Java $tmp_java"
-  sdk use java "$tmp_java" >/dev/null
-  java -version 2>&1 | head -n 1
+  # Resolve currently active Java
+  if [ -L ~/.sdkman/candidates/java/current ]; then
+    current_java_name=$(readlink ~/.sdkman/candidates/java/current | xargs basename)
+  else
+    current_java_name=""
+  fi
 
-  shift
-  mvn "$@"
+  current_version=$(java -version 2>&1 | head -n 1 | grep -oE '[0-9]+')
 
-  if [ -n "$previous_java" ]; then
-    sdk use java "$previous_java" >/dev/null
-    echo "Restored Java to $previous_java"
+  if [[ "$current_java_name" =~ ^${pattern}(\.|$) ]] || [[ "$current_version" == "$pattern" ]]; then
+    # Already using the desired version
+    if [ "$action" = "mvn" ]; then
+      shift 2
+      mvn "$@"
+    else
+      echo "Already using Java version: $current_java_name"
+      java -version 2>&1 | head -n 2
+    fi
+    return 0
+  fi
+
+  if [ "$action" = "mvn" ]; then
+    # mvnwith-style temporary use
+    previous_java=$(readlink ~/.sdkman/candidates/java/current)
+    echo "Temporarily using Java $tmp_java"
+    sdk use java "$tmp_java" >/dev/null
+    java -version 2>&1 | head -n 1
+
+    shift 2
+    mvn "$@"
+
+    if [ -n "$previous_java" ]; then
+      sdk use java "$previous_java" >/dev/null
+      echo "Restored Java to $previous_java"
+    fi
+  else
+    # Permanent switch
+    echo "Switching to Java version: $tmp_java"
+    sdk use java "$tmp_java" >/dev/null
+    java -version 2>&1 | head -n 2
   fi
 }
 
 # Maven shortcuts
 alias mci='mvn clean install'
 alias mciskip='mvn clean install -DskipTests'
-alias mci8='mvnwith 8 clean install'
-alias mci11='mvnwith 11 clean install'
-alias mci17='mvnwith 17 clean install'
-alias mciskip8='mvnwith 8 clean install -DskipTests'
-alias mciskip11='mvnwith 11 clean install -DskipTests'
-alias mciskip17='mvnwith 17 clean install -DskipTests'
+alias mci8='usejava 8 mvn clean install'
+alias mci11='usejava mvn 11 clean install'
+alias mci17='usejava 17 mvn clean install'
+alias mciskip8='usejava 8 mvn clean install -DskipTests'
+alias mciskip11='usejava 11 mvn clean install -DskipTests'
+alias mciskip17='usejava 17 mvn clean install -DskipTests'
