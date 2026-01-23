@@ -4,6 +4,8 @@ set -euo pipefail
 echo "🔄 System Update Script - OS Agnostic"
 echo "========================================"
 
+sudo_keepalive_pid=""
+
 detect_os() {
   if [[ "$(uname)" == "Darwin" ]]; then
     echo "macos"
@@ -61,7 +63,12 @@ update_firmware() {
 
 update_apt() {
   echo "📦 Updating APT packages..."
-  sudo apt update -q
+  local apt_output
+  apt_output=$(sudo apt update -q 2>&1)
+  printf '%s\n' "$apt_output"
+  if printf '%s' "$apt_output" | grep -q "apt.fury.io/rsteube"; then
+    echo "⚠️  APT warning: apt.fury.io/rsteube returned 404. Check /etc/apt/sources.list.d for stale repo entries."
+  fi
   echo "⬆️  Performing full upgrade..."
   sudo apt full-upgrade -y
   echo "🧹 Cleaning up unused packages..."
@@ -144,7 +151,6 @@ update_snap() {
 
 main() {
   local os pm
-  local sudo_keepalive_pid
 
     if command -v sudo >/dev/null 2>&1; then
       sudo -v
@@ -155,7 +161,7 @@ main() {
       done &
       sudo_keepalive_pid=$!
 
-      trap 'kill "$sudo_keepalive_pid"' EXIT
+      trap '[[ -n "${sudo_keepalive_pid:-}" ]] && kill "$sudo_keepalive_pid"' EXIT
     fi
 
   os=$(detect_os)
