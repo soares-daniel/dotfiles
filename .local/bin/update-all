@@ -66,9 +66,6 @@ update_apt() {
   local apt_output
   apt_output=$(sudo apt update -q 2>&1)
   printf '%s\n' "$apt_output"
-  if printf '%s' "$apt_output" | grep -q "apt.fury.io/rsteube"; then
-    echo "⚠️  APT warning: apt.fury.io/rsteube returned 404. Check /etc/apt/sources.list.d for stale repo entries."
-  fi
   echo "⬆️  Performing full upgrade..."
   sudo apt full-upgrade -y
   echo "🧹 Cleaning up unused packages..."
