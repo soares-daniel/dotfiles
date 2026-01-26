@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Runs:
+#   sudo alcs-manager compliance check
+# If any compliance item is "false", runs:
+#   sudo alcs-manager compliance repair
+
+SUDO=(sudo)
+if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+  SUDO=()
+fi
+
+# Run the check, capturing output + exit code (don't let a nonzero exit kill us)
+set +e
+check_output=$("${SUDO[@]}" alcs-manager compliance check 2>&1)
+check_rc=$?
+set -e
+
+# Always print the check output
+printf '%s\n' "$check_output"
+
+# Detect any "false" results in the report
+false_lines=$(printf '%s\n' "$check_output" | grep -Eai ':\s*false\b' || true)
+
+if [[ -n "$false_lines" ]]; then
+  echo
+  echo "❌ Non-compliant items detected:"
+  printf '%s\n' "$false_lines"
+  echo
+  echo "🔧 Running: sudo alcs-manager compliance repair"
+  "${SUDO[@]}" alcs-manager compliance repair
+  exit 0
+fi
+
+# If no "false" lines but the command still failed, treat it as a real error.
+if [[ $check_rc -ne 0 ]]; then
+  echo
+  echo "❌ 'alcs-manager compliance check' failed (exit $check_rc) but no 'false' items were detected."
+  exit "$check_rc"
+fi
+
+echo
+echo "✅ All compliance items are true; no repair needed."
