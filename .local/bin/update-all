@@ -1,208 +1,387 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "🔄 System Update Script - OS Agnostic"
-echo "========================================"
+# Targets: macOS, Ubuntu, Arch
+# Updates:
+# - macOS: softwareupdate (prompted), Homebrew, mas (prompted)
+# - Ubuntu: apt, snap, flatpak, fwupd (prompted)
+# - Arch: pacman, AUR (yay/paru if present), flatpak, fwupd (prompted)
+
+AUTO_YES=0
+SKIP_MAS=0
+SKIP_MACOS_UPDATES=0
+SKIP_BREW=0
+SKIP_SNAP=0
+SKIP_FLATPAK=0
+SKIP_AUR=0
+SKIP_FWUPD=0
 
 sudo_keepalive_pid=""
 
+usage() {
+  cat <<'TEXT'
+Usage:
+  update-system.sh [options]
+
+Options:
+  -y, --yes            Non-interactive: assume "yes" for prompts
+  --skip-macos         Skip macOS software updates (softwareupdate)
+  --skip-mas           Skip Mac App Store updates (mas)
+  --skip-brew          Skip Homebrew updates
+  --skip-snap          Skip Snap refresh
+  --skip-flatpak       Skip Flatpak updates
+  --skip-aur           Skip AUR helper updates (yay/paru) on Arch
+  --skip-fwupd         Skip firmware updates (fwupdmgr)
+  -h, --help           Show help
+TEXT
+}
+
+parse_args() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -y|--yes)
+        AUTO_YES=1
+        shift
+        ;;
+      --skip-macos)
+        SKIP_MACOS_UPDATES=1
+        shift
+        ;;
+      --skip-mas)
+        SKIP_MAS=1
+        shift
+        ;;
+      --skip-brew)
+        SKIP_BREW=1
+        shift
+        ;;
+      --skip-snap)
+        SKIP_SNAP=1
+        shift
+        ;;
+      --skip-flatpak)
+        SKIP_FLATPAK=1
+        shift
+        ;;
+      --skip-aur)
+        SKIP_AUR=1
+        shift
+        ;;
+      --skip-fwupd)
+        SKIP_FWUPD=1
+        shift
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        echo "Unknown option: $1"
+        echo
+        usage
+        exit 2
+        ;;
+    esac
+  done
+}
+
+is_interactive() {
+  [[ -t 0 && -t 1 ]]
+}
+
+confirm() {
+  local prompt="$1"
+  local reply=""
+
+  if [[ "$AUTO_YES" -eq 1 ]]; then
+    return 0
+  fi
+
+  if ! is_interactive; then
+    return 1
+  fi
+
+  read -r -p "$prompt (y/N) " -n 1 reply
+  echo
+  [[ "$reply" =~ ^[Yy]$ ]]
+}
+
+optional_run() {
+  local label="$1"
+  shift
+
+  echo "==> $label"
+  set +e
+  "$@"
+  local status=$?
+  set -e
+
+  if [[ $status -ne 0 ]]; then
+    echo "WARN: $label failed (exit $status). Continuing..."
+  fi
+
+  return 0
+}
+
+SUDO=()
+init_sudo() {
+  if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+    SUDO=()
+    return 0
+  fi
+
+  if command -v sudo >/dev/null 2>&1; then
+    SUDO=(sudo)
+    return 0
+  fi
+
+  SUDO=()
+}
+
+require_root_or_sudo() {
+  if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+    return 0
+  fi
+
+  if [[ ${#SUDO[@]} -eq 0 ]]; then
+    echo "ERROR: This operation requires root or sudo."
+    exit 1
+  fi
+}
+
+start_sudo_keepalive() {
+  # Only useful if we actually have sudo and aren't root
+  if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+    return 0
+  fi
+
+  if [[ ${#SUDO[@]} -eq 0 ]]; then
+    return 0
+  fi
+
+  "${SUDO[@]}" -v
+
+  while sleep 60; do
+    "${SUDO[@]}" -n true 2>/dev/null || true
+  done &
+  sudo_keepalive_pid=$!
+
+  trap '[[ -n "${sudo_keepalive_pid:-}" ]] && kill "$sudo_keepalive_pid" 2>/dev/null || true' EXIT
+}
+
 detect_os() {
-  if [[ "$(uname)" == "Darwin" ]]; then
+  if [[ "$(uname -s)" == "Darwin" ]]; then
     echo "macos"
-  elif [[ -f /etc/os-release ]]; then
+    return 0
+  fi
+
+  if [[ -f /etc/os-release ]]; then
+    # shellcheck disable=SC1091
     source /etc/os-release
-    echo "$ID"
-  else
-    echo "unknown"
+    echo "${ID:-unknown}"
+    return 0
   fi
+
+  echo "unknown"
 }
 
-detect_package_manager() {
-  local os="$1"
-  case "$os" in
-    ubuntu|debian)
-      echo "apt"
-      ;;
-    fedora|rhel|centos)
-      echo "dnf"
-      ;;
-    arch|manjaro)
-      echo "pacman"
-      ;;
-    opensuse*)
-      echo "zypper"
-      ;;
-    alpine)
-      echo "apk"
-      ;;
-    macos)
-      if command -v brew >/dev/null 2>&1; then
-        echo "brew"
-      else
-        echo "none"
-      fi
-      ;;
-    *)
-      echo "unknown"
-      ;;
-  esac
-}
-
-update_firmware() {
-  if command -v fwupdmgr >/dev/null 2>&1; then
-    echo "🔧 Checking for firmware updates..."
-    sudo fwupdmgr refresh --force
-    sudo fwupdmgr get-updates
-    read -p "Install firmware updates? (y/N) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-      sudo fwupdmgr update -y
-    fi
+update_fwupd() {
+  if [[ "$SKIP_FWUPD" -eq 1 ]]; then
+    return 0
   fi
-}
 
-update_apt() {
-  echo "📦 Updating APT packages..."
-  local apt_output
-  apt_output=$(sudo apt update -q 2>&1)
-  printf '%s\n' "$apt_output"
-  echo "⬆️  Performing full upgrade..."
-  sudo apt full-upgrade -y
-  echo "🧹 Cleaning up unused packages..."
-  sudo apt autoremove --purge -y
-  sudo apt autoclean -y
+  if ! command -v fwupdmgr >/dev/null 2>&1; then
+    return 0
+  fi
 
-  update_firmware
-}
+  require_root_or_sudo
+  echo "Firmware updates (fwupd)..."
+  "${SUDO[@]}" fwupdmgr refresh --force
+  "${SUDO[@]}" fwupdmgr get-updates || true
 
-update_dnf() {
-  echo "📦 Updating DNF packages..."
-  sudo dnf upgrade --refresh -y
-  echo "🧹 Cleaning up..."
-  sudo dnf autoremove -y
-  sudo dnf clean all
-
-  update_firmware
-}
-
-update_pacman() {
-  echo "📦 Updating Pacman packages..."
-  sudo pacman -Syu --noconfirm
-  echo "🧹 Cleaning up..."
-  sudo pacman -Sc --noconfirm --keep 1
-
-  update_firmware
-}
-
-update_zypper() {
-  echo "📦 Updating Zypper packages..."
-  sudo zypper refresh
-  sudo zypper up -y
-  echo "🧹 Cleaning up..."
-  sudo zypper clean -a
-
-  update_firmware
-}
-
-update_apk() {
-  echo "📦 Updating APK packages..."
-  sudo apk update
-  sudo apk upgrade -a
-}
-
-update_brew() {
-  echo "📦 Updating Homebrew packages..."
-  brew update
-  brew upgrade
-  echo "🧹 Cleaning up..."
-  brew cleanup -s
-
-  if command -v softwareupdate >/dev/null 2>&1; then
-    echo "🍎 Checking for macOS system updates..."
-    softwareupdate --list
-    read -p "Install macOS updates? (y/N) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-      sudo softwareupdate --install --all
-    fi
+  if confirm "Install firmware updates now?"; then
+    "${SUDO[@]}" fwupdmgr update --assume-yes
   fi
 }
 
 update_flatpak() {
-  if command -v flatpak >/dev/null 2>&1; then
-    echo "📦 Updating Flatpak packages..."
-    if flatpak remotes | grep -q flathub; then
-      flatpak update -y
-    fi
-    echo "🧹 Cleaning up..."
-    flatpak uninstall --unused -y
+  if [[ "$SKIP_FLATPAK" -eq 1 ]]; then
+    return 0
   fi
+
+  if ! command -v flatpak >/dev/null 2>&1; then
+    return 0
+  fi
+
+  echo "Flatpak updates..."
+  optional_run "flatpak update" flatpak update -y
+  optional_run "flatpak uninstall unused" flatpak uninstall --unused -y
 }
 
 update_snap() {
-  if command -v snap >/dev/null 2>&1; then
-    echo "📦 Updating Snap packages..."
-    sudo snap refresh
+  if [[ "$SKIP_SNAP" -eq 1 ]]; then
+    return 0
+  fi
+
+  if ! command -v snap >/dev/null 2>&1; then
+    return 0
+  fi
+
+  echo "Snap updates..."
+  require_root_or_sudo
+  optional_run "snap refresh" "${SUDO[@]}" snap refresh
+}
+
+update_brew() {
+  if [[ "$SKIP_BREW" -eq 1 ]]; then
+    return 0
+  fi
+
+  if ! command -v brew >/dev/null 2>&1; then
+    return 0
+  fi
+
+  echo "Homebrew updates..."
+  optional_run "brew update" brew update
+  optional_run "brew upgrade" brew upgrade
+  optional_run "brew upgrade (casks)" brew upgrade --cask --greedy
+  optional_run "brew cleanup" brew cleanup -s
+  optional_run "brew autoremove" brew autoremove
+}
+
+update_mas() {
+  if [[ "$SKIP_MAS" -eq 1 ]]; then
+    return 0
+  fi
+
+  if ! command -v mas >/dev/null 2>&1; then
+    return 0
+  fi
+
+  echo "Mac App Store updates (mas)..."
+  optional_run "mas outdated" mas outdated
+
+  if confirm "Upgrade Mac App Store apps via mas?"; then
+    optional_run "mas upgrade" mas upgrade
   fi
 }
 
-main() {
-  local os pm
+update_macos_system() {
+  if [[ "$SKIP_MACOS_UPDATES" -eq 1 ]]; then
+    return 0
+  fi
 
-    if command -v sudo >/dev/null 2>&1; then
-      sudo -v
+  if ! command -v softwareupdate >/dev/null 2>&1; then
+    return 0
+  fi
 
-      while true; do
-        sudo -n true
-        sleep 60
-      done &
-      sudo_keepalive_pid=$!
+  echo "macOS system updates (softwareupdate)..."
+  optional_run "softwareupdate --list" softwareupdate --list
 
-      trap '[[ -n "${sudo_keepalive_pid:-}" ]] && kill "$sudo_keepalive_pid"' EXIT
+  if confirm "Install macOS system updates now?"; then
+    if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+      optional_run "softwareupdate --install --all" softwareupdate --install --all
+    else
+      if command -v sudo >/dev/null 2>&1; then
+        optional_run "softwareupdate --install --all" sudo softwareupdate \
+          --install --all
+      else
+        optional_run "softwareupdate --install --all" softwareupdate \
+          --install --all
+      fi
     fi
+  fi
+}
 
+update_ubuntu() {
+  require_root_or_sudo
+  start_sudo_keepalive
+
+  echo "Ubuntu: apt updates..."
+  "${SUDO[@]}" apt update -q
+  "${SUDO[@]}" apt full-upgrade -y
+  "${SUDO[@]}" apt autoremove --purge -y
+  "${SUDO[@]}" apt autoclean -y
+
+  update_fwupd
+  update_snap
+  update_flatpak
+}
+
+update_arch_aur() {
+  if [[ "$SKIP_AUR" -eq 1 ]]; then
+    return 0
+  fi
+
+  # Never run AUR helpers with sudo/root.
+  if command -v yay >/dev/null 2>&1; then
+    echo "Arch: AUR updates via yay..."
+    optional_run "yay -Syu" yay -Syu --noconfirm
+  elif command -v paru >/dev/null 2>&1; then
+    echo "Arch: AUR updates via paru..."
+    optional_run "paru -Syu" paru -Syu --noconfirm
+  fi
+}
+
+update_arch() {
+  require_root_or_sudo
+  start_sudo_keepalive
+
+  echo "Arch: pacman updates..."
+  "${SUDO[@]}" pacman -Syu --noconfirm
+
+  echo "Arch: cleaning package cache..."
+  if command -v paccache >/dev/null 2>&1; then
+    "${SUDO[@]}" paccache -rk2
+  else
+    "${SUDO[@]}" pacman -Sc --noconfirm
+  fi
+
+  update_fwupd
+  update_arch_aur
+  update_flatpak
+  update_snap
+}
+
+update_macos() {
+  # brew/mas should be run as the user (not sudo)
+  update_brew
+  update_mas
+  update_macos_system
+
+  # Optional on macOS (rare, but harmless if installed)
+  update_flatpak
+}
+
+main() {
+  parse_args "$@"
+  init_sudo
+
+  local os
   os=$(detect_os)
-  pm=$(detect_package_manager "$os")
 
   echo "Detected OS: $os"
-  echo "Package Manager: $pm"
-  echo ""
+  echo
 
-  case "$pm" in
-    apt)
-      update_apt
+  case "$os" in
+    ubuntu)
+      update_ubuntu
       ;;
-    dnf)
-      update_dnf
+    arch)
+      update_arch
       ;;
-    pacman)
-      update_pacman
-      ;;
-    zypper)
-      update_zypper
-      ;;
-    apk)
-      update_apk
-      ;;
-    brew)
-      update_brew
-      ;;
-    unknown)
-      echo "❌ Unknown package manager. Manual update required."
-      return 1
+    macos)
+      update_macos
       ;;
     *)
-      echo "❌ No package manager found."
-      return 1
+      echo "ERROR: This script is scoped to macOS, Ubuntu, and Arch."
+      echo "Detected: $os"
+      exit 1
       ;;
   esac
 
-  echo ""
-  update_flatpak
-  update_snap
-
-  echo ""
-  echo "✅ System update completed."
+  echo
+  echo "Done."
 }
 
 main "$@"
