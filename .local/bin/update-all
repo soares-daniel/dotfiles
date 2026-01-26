@@ -18,6 +18,43 @@ SKIP_FWUPD=0
 
 sudo_keepalive_pid=""
 
+C_RESET='\033[0m'
+C_BOLD='\033[1m'
+C_DIM='\033[2m'
+C_RED='\033[31m'
+C_GREEN='\033[32m'
+C_YELLOW='\033[33m'
+C_BLUE='\033[34m'
+C_CYAN='\033[36m'
+
+msg_header() {
+  printf "${C_BOLD}${C_CYAN}▶ %s${C_RESET}\n" "$*"
+}
+
+msg_section() {
+  printf "\n${C_BOLD}${C_BLUE}━━━ %s ━━━${C_RESET}\n" "$*"
+}
+
+msg_task() {
+  printf "${C_DIM}  → %s${C_RESET}\n" "$*"
+}
+
+msg_success() {
+  printf "${C_GREEN}✓${C_RESET} %s\n" "$*"
+}
+
+msg_warn() {
+  printf "${C_YELLOW}⚠${C_RESET} %s\n" "$*"
+}
+
+msg_error() {
+  printf "${C_RED}✗${C_RESET} %s\n" "$*" >&2
+}
+
+msg_info() {
+  printf "${C_CYAN}ℹ${C_RESET} %s\n" "$*"
+}
+
 usage() {
   cat <<'TEXT'
 Usage:
@@ -76,7 +113,7 @@ parse_args() {
         exit 0
         ;;
       *)
-        echo "Unknown option: $1"
+        msg_error "Unknown option: $1"
         echo
         usage
         exit 2
@@ -101,7 +138,7 @@ confirm() {
     return 1
   fi
 
-  read -r -p "$prompt (y/N) " -n 1 reply
+  read -r -p "$(printf "${C_YELLOW}?${C_RESET} %s (y/N) " "$prompt")" -n 1 reply
   echo
   [[ "$reply" =~ ^[Yy]$ ]]
 }
@@ -110,14 +147,14 @@ optional_run() {
   local label="$1"
   shift
 
-  echo "==> $label"
+  msg_task "$label"
   set +e
   "$@"
   local status=$?
   set -e
 
   if [[ $status -ne 0 ]]; then
-    echo "WARN: $label failed (exit $status). Continuing..."
+    msg_warn "$label failed (exit $status). Continuing..."
   fi
 
   return 0
@@ -144,7 +181,7 @@ require_root_or_sudo() {
   fi
 
   if [[ ${#SUDO[@]} -eq 0 ]]; then
-    echo "ERROR: This operation requires root or sudo."
+    msg_error "This operation requires root or sudo."
     exit 1
   fi
 }
@@ -195,7 +232,7 @@ update_fwupd() {
   fi
 
   require_root_or_sudo
-  echo "Firmware updates (fwupd)..."
+  msg_section "Firmware Updates (fwupd)"
   "${SUDO[@]}" fwupdmgr refresh --force
   "${SUDO[@]}" fwupdmgr get-updates || true
 
@@ -213,7 +250,7 @@ update_flatpak() {
     return 0
   fi
 
-  echo "Flatpak updates..."
+  msg_section "Flatpak Updates"
   optional_run "flatpak update" flatpak update -y
   optional_run "flatpak uninstall unused" flatpak uninstall --unused -y
 }
@@ -227,7 +264,7 @@ update_snap() {
     return 0
   fi
 
-  echo "Snap updates..."
+  msg_section "Snap Updates"
   require_root_or_sudo
   optional_run "snap refresh" "${SUDO[@]}" snap refresh
 }
@@ -241,7 +278,7 @@ update_brew() {
     return 0
   fi
 
-  echo "Homebrew updates..."
+  msg_section "Homebrew Updates"
   optional_run "brew update" brew update
   optional_run "brew upgrade" brew upgrade
   optional_run "brew upgrade (casks)" brew upgrade --cask --greedy
@@ -258,7 +295,7 @@ update_mas() {
     return 0
   fi
 
-  echo "Mac App Store updates (mas)..."
+  msg_section "Mac App Store Updates"
   optional_run "mas outdated" mas outdated
 
   if confirm "Upgrade Mac App Store apps via mas?"; then
@@ -275,7 +312,7 @@ update_macos_system() {
     return 0
   fi
 
-  echo "macOS system updates (softwareupdate)..."
+  msg_section "macOS System Updates"
   optional_run "softwareupdate --list" softwareupdate --list
 
   if confirm "Install macOS system updates now?"; then
@@ -297,7 +334,7 @@ update_ubuntu() {
   require_root_or_sudo
   start_sudo_keepalive
 
-  echo "Ubuntu: apt updates..."
+  msg_section "Ubuntu: APT Updates"
   "${SUDO[@]}" apt update -q
   "${SUDO[@]}" apt full-upgrade -y
   "${SUDO[@]}" apt autoremove --purge -y
@@ -315,10 +352,10 @@ update_arch_aur() {
 
   # Never run AUR helpers with sudo/root.
   if command -v yay >/dev/null 2>&1; then
-    echo "Arch: AUR updates via yay..."
+    msg_section "Arch: AUR Updates (yay)"
     optional_run "yay -Syu" yay -Syu --noconfirm
   elif command -v paru >/dev/null 2>&1; then
-    echo "Arch: AUR updates via paru..."
+    msg_section "Arch: AUR Updates (paru)"
     optional_run "paru -Syu" paru -Syu --noconfirm
   fi
 }
@@ -327,10 +364,10 @@ update_arch() {
   require_root_or_sudo
   start_sudo_keepalive
 
-  echo "Arch: pacman updates..."
+  msg_section "Arch: Pacman Updates"
   "${SUDO[@]}" pacman -Syu --noconfirm
 
-  echo "Arch: cleaning package cache..."
+  msg_task "Cleaning package cache..."
   if command -v paccache >/dev/null 2>&1; then
     "${SUDO[@]}" paccache -rk2
   else
@@ -360,7 +397,7 @@ main() {
   local os
   os=$(detect_os)
 
-  echo "Detected OS: $os"
+  msg_info "Detected OS: $os"
   echo
 
   case "$os" in
@@ -374,14 +411,13 @@ main() {
       update_macos
       ;;
     *)
-      echo "ERROR: This script is scoped to macOS, Ubuntu, and Arch."
-      echo "Detected: $os"
+      msg_error "This script is scoped to macOS, Ubuntu, and Arch. Detected: $os"
       exit 1
       ;;
   esac
 
   echo
-  echo "Done."
+  msg_success "All updates complete!"
 }
 
 main "$@"
