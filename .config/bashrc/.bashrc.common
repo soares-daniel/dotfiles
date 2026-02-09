@@ -84,15 +84,11 @@ require_cmd() {
 
 check_optional() {
   local cmd="$1"
-  local action="$2"
-  local label="${3:-$cmd}"
+  local label="${2:-$cmd}"
 
-  if command -v "$cmd" >/dev/null 2>&1; then
-    if [ -n "$action" ]; then
-      eval "$action"
-    fi
-  else
+  if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "[WARN] Optional component not found: ${label}"
+    return 1
   fi
 }
 
@@ -106,12 +102,12 @@ require_cmd kubectl
 require_cmd go
 
 # Optionals
-check_optional fzf "" "fzf"
-check_optional ng 'source <(ng completion script)' "Angular CLI"
-check_optional starship 'eval "$(starship init bash)"' "Starship prompt"
-check_optional eza "" "eza"
-check_optional opencode "" "opencode"
-check_optional bun "" "bun"
+check_optional fzf "fzf"
+check_optional ng "Angular CLI" && source <(ng completion script)
+check_optional starship "Starship prompt" && eval "$(starship init bash)"
+check_optional eza "eza"
+check_optional opencode "opencode" && opencode -v >/dev/null 2>&1
+check_optional bun "bun" && bun -v >/dev/null 2>&1
 
 # Eza aliases
 alias ls="eza --color=always --group-directories-first --icons"
@@ -135,7 +131,7 @@ alias preview="fzf --preview 'bat --style=numbers --color=always --line-range :5
 alias cpreview="preview | xargs zed"
 
 alias cl='clear'
-alias reload='source ~/.bashrc && echo "🔁 bashrc reloaded"'
+alias reload='source ~/.bashrc && echo "Bashrc reloaded !"'
 
 # Git aliases
 alias gc="git commit -m"
