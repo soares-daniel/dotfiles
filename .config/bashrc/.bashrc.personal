@@ -4,3 +4,6 @@
 # Example:
 # export EDITOR=nvim
 # alias v=nvim
+
+
+alias update='update-all && alcs-compliance'
