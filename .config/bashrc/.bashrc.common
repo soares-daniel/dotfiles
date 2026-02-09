@@ -173,6 +173,8 @@ stowdotfiles() {
 # System Update Helper (OS-agnostic)
 alias update='update-all'
 
+alias s='sudo'
+
 # opencode
 export PATH=$HOME/.opencode/bin:$PATH
 
