@@ -126,3 +126,9 @@ alias mci17='usejava 17 mvn clean install'
 alias mciskip8='usejava 8 mvn clean install -DskipTests'
 alias mciskip11='usejava 11 mvn clean install -DskipTests'
 alias mciskip17='usejava 17 mvn clean install -DskipTests'
+
+
+# Overwrites
+update_post() {
+  alcs-compliance
+}

@@ -187,15 +187,22 @@ require_root_or_sudo() {
 }
 
 start_sudo_keepalive() {
-  # Only useful if we actually have sudo and aren't root
+  # No need to keep sudo alive if we're root
   if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
     return 0
   fi
 
+  # No sudo available
   if [[ ${#SUDO[@]} -eq 0 ]]; then
     return 0
   fi
 
+  # If sudo does not require a password, skip keepalive entirely
+  if "${SUDO[@]}" -n true 2>/dev/null; then
+    return 0
+  fi
+
+  # Otherwise, validate once and keep alive
   "${SUDO[@]}" -v
 
   while sleep 60; do
@@ -233,9 +240,37 @@ update_fwupd() {
 
   require_root_or_sudo
   msg_section "Firmware Updates (fwupd)"
-  "${SUDO[@]}" fwupdmgr refresh --force
-  "${SUDO[@]}" fwupdmgr get-updates || true
 
+  "${SUDO[@]}" fwupdmgr refresh || true
+
+  local updates_output updates_rc
+  set +e
+  updates_output=$("${SUDO[@]}" fwupdmgr get-updates 2>&1)
+  updates_rc=$?
+  set -e
+
+  # Print raw output (don’t wrap in msg_info; it’s multiline)
+  printf "%s\n" "$updates_output"
+
+  # Treat “nothing to do” as success.
+  # fwupdmgr commonly returns exit 2 in this case.
+  if [[ $updates_rc -eq 2 ]]; then
+    return 0
+  fi
+
+  # Also treat explicit “no updates” text as success, regardless of rc.
+  if grep -qiE "no updates available|no updatable devices|nothing to do" \
+    <<<"$updates_output"; then
+    return 0
+  fi
+
+  # If we get here and it still failed, that’s a real-ish failure.
+  if [[ $updates_rc -ne 0 ]]; then
+    msg_warn "fwupdmgr get-updates failed (exit $updates_rc). Skipping."
+    return 0
+  fi
+
+  # If it succeeded and doesn’t look like “no updates”, only then prompt/install.
   if confirm "Install firmware updates now?"; then
     "${SUDO[@]}" fwupdmgr update --assume-yes
   fi
@@ -398,7 +433,6 @@ main() {
   os=$(detect_os)
 
   msg_info "Detected OS: $os"
-  echo
 
   case "$os" in
     ubuntu)

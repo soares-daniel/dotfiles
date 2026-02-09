@@ -1,44 +1,116 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Runs:
-#   sudo alcs-manager compliance check
-# If any compliance item is "false", runs:
-#   sudo alcs-manager compliance repair
+C_RESET="\033[0m"
+C_BOLD="\033[1m"
+C_DIM="\033[2m"
+C_RED="\033[31m"
+C_GREEN="\033[32m"
+C_YELLOW="\033[33m"
+C_BLUE="\033[34m"
+C_CYAN="\033[36m"
 
-SUDO=(sudo)
-if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+msg_header() {
+  printf "${C_BOLD}${C_CYAN}▶ %s${C_RESET}\n" "$*"
+}
+
+msg_section() {
+  printf "\n${C_BOLD}${C_BLUE}━━━ %s ━━━${C_RESET}\n" "$*"
+}
+
+msg_task() {
+  printf "${C_DIM}  → %s${C_RESET}\n" "$*"
+}
+
+msg_success() {
+  printf "${C_GREEN}✓${C_RESET} %s\n" "$*"
+}
+
+msg_warn() {
+  printf "${C_YELLOW}⚠${C_RESET} %s\n" "$*"
+}
+
+msg_error() {
+  printf "${C_RED}✗${C_RESET} %s\n" "$*" >&2
+}
+
+msg_info() {
+  printf "${C_CYAN}ℹ${C_RESET} %s\n" "$*"
+}
+
+SUDO=()
+init_sudo() {
+  if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+    SUDO=()
+    return 0
+  fi
+
+  if command -v sudo >/dev/null 2>&1; then
+    SUDO=(sudo)
+    return 0
+  fi
+
   SUDO=()
-fi
+}
 
-# Run the check, capturing output + exit code (don't let a nonzero exit kill us)
-set +e
-check_output=$("${SUDO[@]}" alcs-manager compliance check 2>&1)
-check_rc=$?
-set -e
+require_root_or_sudo() {
+  if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+    return 0
+  fi
 
-# Always print the check output
-printf '%s\n' "$check_output"
+  if [[ ${#SUDO[@]} -eq 0 ]]; then
+    msg_error "This operation requires root or sudo, but sudo was not found."
+    exit 1
+  fi
+}
 
-# Detect any "false" results in the report
-false_lines=$(printf '%s\n' "$check_output" | grep -Eai ':\s*false\b' || true)
+main() {
+  msg_section "ALCS Compliance"
 
-if [[ -n "$false_lines" ]]; then
-  echo
-  echo "❌ Non-compliant items detected:"
-  printf '%s\n' "$false_lines"
-  echo
-  echo "🔧 Running: sudo alcs-manager compliance repair"
-  "${SUDO[@]}" alcs-manager compliance repair
-  exit 0
-fi
+  init_sudo
+  require_root_or_sudo
 
-# If no "false" lines but the command still failed, treat it as a real error.
-if [[ $check_rc -ne 0 ]]; then
-  echo
-  echo "❌ 'alcs-manager compliance check' failed (exit $check_rc) but no 'false' items were detected."
-  exit "$check_rc"
-fi
+  if ! command -v alcs-manager >/dev/null 2>&1; then
+    msg_error "alcs-manager not found in PATH."
+    exit 127
+  fi
 
-echo
-echo "✅ All compliance items are true; no repair needed."
+  msg_task "Running: alcs-manager compliance check"
+
+  # Capture output + exit code (don't let nonzero exit kill the script)
+  local check_output check_rc
+  set +e
+  check_output=$("${SUDO[@]}" alcs-manager compliance check 2>&1)
+  check_rc=$?
+  set -e
+
+  # Print the tool output raw (keeps its formatting)
+  printf "%s\n" "$check_output"
+
+  # Detect any "false" results in the report
+  local false_lines
+  false_lines=$(grep -Eai ":\s*false\b" <<<"$check_output" || true)
+
+  if [[ -n "$false_lines" ]]; then
+    msg_warn "Non-compliant items detected:"
+    printf "%s\n" "$false_lines"
+
+    msg_task "Running: alcs-manager compliance repair"
+    "${SUDO[@]}" alcs-manager compliance repair
+
+    msg_success "Compliance repair finished."
+    exit 0
+  fi
+
+  # If no "false" lines but the command still failed, treat it as a real error.
+  if [[ $check_rc -ne 0 ]]; then
+    msg_error \
+      "'alcs-manager compliance check' failed (exit $check_rc) but no " \
+      "'false' items were detected."
+    exit "$check_rc"
+  fi
+
+  msg_success "All compliance items are true; no repair needed."
+}
+
+main "$@"

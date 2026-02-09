@@ -110,6 +110,8 @@ check_optional fzf "" "fzf"
 check_optional ng 'source <(ng completion script)' "Angular CLI"
 check_optional starship 'eval "$(starship init bash)"' "Starship prompt"
 check_optional eza "" "eza"
+check_optional opencode "" "opencode"
+check_optional bun "" "bun"
 
 # Eza aliases
 alias ls="eza --color=always --group-directories-first --icons"
@@ -171,7 +173,10 @@ stowdotfiles() {
 }
 
 # System Update Helper (OS-agnostic)
-alias update='update-all'
+update() {
+  update-all
+  type update_post >/dev/null 2>&1 && update_post
+}
 
 alias s='sudo'
 
@@ -180,3 +185,11 @@ export PATH=$HOME/.opencode/bin:$PATH
 
 # Dev Tools CLI
 export PATH="$PATH:$HOME/.local/bin"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+export PATH="$HOME/.bun/bin:$PATH"
+
+# Load Angular CLI autocompletion.
+source <(ng completion script)

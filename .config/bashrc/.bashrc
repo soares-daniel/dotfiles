@@ -17,11 +17,3 @@ DOTFILES_CONTEXT="personal"
 
 # Dev Tools CLI
 export PATH="$PATH:/home/d-a-soares/.local/bin"
-
-# Load Angular CLI autocompletion.
-source <(ng completion script)
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-export PATH="$HOME/.bun/bin:$PATH"
