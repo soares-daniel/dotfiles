@@ -9,10 +9,10 @@ profile home_dual {
 # WORK: single 4K @60; laptop off (omit eDP-1)
 profile work_single {
   output eDP-1 disable
-  output DP-1 enable mode 3840x2160@59.997 position 0,0 scale 1.25
+  output DP-1 position 0,0
 }
 
 # LAPTOP-ONLY: just eDP-1
 profile laptop_only {
-  output eDP-1 enable mode 1920x1080 position 0,0 scale 1
+  output eDP-1 position 0,0
 }

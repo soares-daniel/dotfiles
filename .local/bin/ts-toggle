@@ -1,0 +1,20 @@
+#!/bin/bash
+
+STATUS=$(tailscale status --json 2>/dev/null | grep '"BackendState"' | grep -o 'Running')
+
+if [ "$STATUS" = "Running" ]; then
+  echo "Tailscale is connected. Turning it off..."
+
+  sudo tailscale down
+  sudo systemctl stop tailscaled
+
+  echo "Tailscale stopped."
+else
+  echo "Tailscale is not connected. Starting it..."
+
+  sudo systemctl start tailscaled
+  sleep 1
+  sudo tailscale up
+
+  echo "Tailscale started."
+fi

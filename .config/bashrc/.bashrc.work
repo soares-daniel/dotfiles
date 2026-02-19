@@ -58,62 +58,48 @@ alias mfa='~/.aws/mfa.sh'
 alias listjava='ls -1 ~/.sdkman/candidates/java'
 
 usejava() {
-  local pattern="$1" action="$2" tmp_java previous_java current_java_name current_version
+  local pattern="$1"
+  shift
 
   if [ -z "$pattern" ]; then
     echo "Usage:"
-    echo "  usejava <version>           # switch SDKMAN java version"
-    echo "  usejava <version> mvn ...   # run Maven command with that version"
+    echo "  usejava <version>"
+    echo "  usejava <version> mvn ..."
     return 1
   fi
 
-  # Resolve target Java path
-  tmp_java=$(find ~/.sdkman/candidates/java -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | grep -E -m1 "^${pattern}(\.|$)")
-  if [ -z "$tmp_java" ]; then
+  local target
+  target=$(find ~/.sdkman/candidates/java \
+    -mindepth 1 -maxdepth 1 -type d -printf "%f\n" |
+    grep -E -m1 "^${pattern}(\.|$)")
+
+  if [ -z "$target" ]; then
     echo "No matching Java version found for: $pattern"
     return 1
   fi
 
-  # Resolve currently active Java
-  if [ -L ~/.sdkman/candidates/java/current ]; then
-    current_java_name=$(readlink ~/.sdkman/candidates/java/current | xargs basename)
-  else
-    current_java_name=""
+  local current=""
+  if [ -n "$JAVA_HOME" ]; then
+    current=$(basename "$JAVA_HOME")
   fi
 
-  current_version=$(java -version 2>&1 | head -n 1 | grep -oE '[0-9]+')
-
-  if [[ "$current_java_name" =~ ^${pattern}(\.|$) ]] || [[ "$current_version" == "$pattern" ]]; then
-    # Already using the desired version
-    if [ "$action" = "mvn" ]; then
-      shift 2
+  if [[ "$current" =~ ^${pattern}(\.|$) ]]; then
+    echo "Already using Java version: $current"
+    java -version 2>&1 | head -n 2
+    if [ "$1" = "mvn" ]; then
+      shift
       mvn "$@"
-    else
-      echo "Already using Java version: $current_java_name"
-      java -version 2>&1 | head -n 2
     fi
     return 0
   fi
 
-  if [ "$action" = "mvn" ]; then
-    # mvnwith-style temporary use
-    previous_java=$(readlink ~/.sdkman/candidates/java/current)
-    echo "Temporarily using Java $tmp_java"
-    sdk use java "$tmp_java" >/dev/null
-    java -version 2>&1 | head -n 1
+  echo "Switching to Java version: $target"
+  sdk use java "$target" >/dev/null
+  java -version 2>&1 | head -n 2
 
-    shift 2
+  if [ "$1" = "mvn" ]; then
+    shift
     mvn "$@"
-
-    if [ -n "$previous_java" ]; then
-      sdk use java "$previous_java" >/dev/null
-      echo "Restored Java to $previous_java"
-    fi
-  else
-    # Permanent switch
-    echo "Switching to Java version: $tmp_java"
-    sdk use java "$tmp_java" >/dev/null
-    java -version 2>&1 | head -n 2
   fi
 }
 

@@ -16,9 +16,9 @@
   },
   "format": "{icon}&#8239;{capacity}%",
   "format-charging": "&#8239;{capacity}%",
-  "format-plugged": "&#8239;{capacity}%",
+  "format-plugged": "&#8239;{capacity}%",
   "format-alt": "{icon} {time}",
-  "format-icons": ["", "", "", "", "", "", ""]
+  "format-icons": ["", "", "", "", ""]
 },
 "hyprland/workspaces": {
      "sort-by-name": true,
@@ -84,14 +84,14 @@
   // "scroll-step": 1, // %, can be a float
   "format": "{icon} {volume}% {format_source}",
   "format-bluetooth": "{icon} {volume}% {format_source}",
-  "format-bluetooth-muted": " {format_source}",
-  "format-muted": " {format_source}",
+  "format-bluetooth-muted": " {format_source}",
+  "format-muted": " {format_source}",
   "format-source": " {volume}%",
   "format-source-muted": "",
   "format-icons": {
     "headphone": "",
     "hands-free": "",
-    "headset": "🎧",
+    "headset": "",
     "phone": "",
     "portable": "",
     "car": "",
@@ -101,8 +101,8 @@
 },
 "mpd": {
   "format": "{stateIcon} {artist} - {title}",
-  "format-disconnected": "🎶",
-  "format-stopped": "♪",
+  "format-disconnected": "",
+  "format-stopped": "",
   "interval": 10,
   "consume-icons": {
     "on": " " // Icon shows only when "consume" is on
@@ -134,8 +134,8 @@
     "exec-if": "pgrep wf-recorder",
 },
 "custom/audiorec": {
-    "format": "♬ Rec",
-    "format-disabled": "♬ Off-air", //An empty format will hide the module.
+    "format": " Rec",
+    "format-disabled": " Off-air", //An empty format will hide the module.
     "return-type": "json",
     "interval": 1,
     "exec": "echo '{\"class\": \"audio recording\"}'",
