@@ -69,9 +69,8 @@ usejava() {
   fi
 
   local target
-  target=$(find ~/.sdkman/candidates/java \
-    -mindepth 1 -maxdepth 1 -type d -printf "%f\n" |
-    grep -E -m1 "^${pattern}(\.|$)")
+  target=$(find ~/.sdkman/candidates/java -mindepth 1 -maxdepth 1 -type d \
+    -printf "%f\n" | grep -E -m1 "^${pattern}(\.|$)")
 
   if [ -z "$target" ]; then
     echo "No matching Java version found for: $pattern"
@@ -98,23 +97,39 @@ usejava() {
   java -version 2>&1 | head -n 2
 
   if [ "$1" = "mvn" ]; then
-    shift
-    mvn "$@"
+      shift
+      mvn "$@"
+    fi
+  }
+
+mci() {
+  local ver="$1"
+  shift || true
+
+  if [[ "$ver" =~ ^[0-9]+$ ]]; then
+    usejava "$ver" mvn clean install "$@"
+  else
+    mvn clean install "$ver" "$@"
   fi
 }
 
-# Maven shortcuts
-alias mci='mvn clean install'
-alias mciskip='mvn clean install -DskipTests'
-alias mci8='usejava 8 mvn clean install'
-alias mci11='usejava mvn 11 clean install'
-alias mci17='usejava 17 mvn clean install'
-alias mciskip8='usejava 8 mvn clean install -DskipTests'
-alias mciskip11='usejava 11 mvn clean install -DskipTests'
-alias mciskip17='usejava 17 mvn clean install -DskipTests'
+mciskip() {
+  local ver="$1"
+  shift || true
 
+  if [[ "$ver" =~ ^[0-9]+$ ]]; then
+    usejava "$ver" mvn clean install -DskipTests "$@"
+  else
+    mvn clean install -DskipTests "$ver" "$@"
+  fi
+}
+
+alias fix-dns="sudo resolvectl dns wlp0s20f3 10.0.64.245 10.0.64.151"
 
 # Overwrites
 update_post() {
   alcs-compliance
 }
+
+export PATH="$PATH:/home/d-a-soares/.local/bin"
+. "$HOME/.cargo/env"

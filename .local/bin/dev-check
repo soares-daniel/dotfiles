@@ -1,0 +1,138 @@
+#!/bin/bash
+
+# Environment Loading
+[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+[ -s "$HOME/.nvm/nvm.sh" ] && source "$HOME/.nvm/nvm.sh"
+
+# --- Configuration ---
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+print_status() {
+    local status=$1
+    local label=$2
+    local details=$3
+    case $status in
+        "ok") echo -e "${GREEN}  [✓]${NC} ${BOLD}${label}${NC} ${details}" ;;
+        "warn") echo -e "${YELLOW}  [!]${NC} ${label} ${YELLOW}(Optional missing)${NC}" ;;
+        "error") echo -e "${RED}  [✗]${NC} ${BOLD}${label}${NC} ${RED}(Required missing)${NC}" ;;
+    esac
+}
+
+check_tool() {
+    local cmd=$1
+    local label=$2
+    local required=$3
+    local v_arg=${4:-"--version"}
+
+    if command -v "$cmd" >/dev/null 2>&1; then
+        local out
+        out=$($cmd $v_arg 2>&1 | head -n 10)
+
+        local version
+        version=$(echo "$out" | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -n 1)
+
+        [ -z "$version" ] && version=$(echo "$out" | head -n1 | cut -c1-40)
+
+        print_status "ok" "$label" "($version)"
+    else
+        if [[ "$required" == true ]]; then
+            print_status "error" "$label"
+            return 1
+        else
+            print_status "warn" "$label"
+        fi
+    fi
+}
+
+check_java_runtime() {
+
+    echo -e "\n${BOLD}Java Runtime:${NC}"
+
+    if command -v java >/dev/null 2>&1; then
+
+        local version
+        version=$(java -version 2>&1 | grep -oE '"[0-9._]+"' | tr -d '"')
+
+        print_status "ok" "Java Runtime" "($version)"
+
+        if [ -n "$JAVA_HOME" ]; then
+            echo -e "     JAVA_HOME -> $JAVA_HOME"
+        else
+            echo -e "     ${YELLOW}JAVA_HOME not set${NC}"
+        fi
+
+    else
+        print_status "error" "Java Runtime"
+    fi
+
+    if command -v javac >/dev/null 2>&1; then
+        local jv
+        jv=$(javac -version 2>&1 | awk '{print $2}')
+        print_status "ok" "Java Compiler" "($jv)"
+    else
+        print_status "warn" "Java Compiler"
+    fi
+}
+
+check_sdkman_java() {
+
+    echo -e "\n${BOLD}SDKMAN Java Candidates:${NC}"
+
+    local sdk_java_dir="$HOME/.sdkman/candidates/java"
+
+    if [ ! -d "$sdk_java_dir" ]; then
+        print_status "warn" "SDKMAN Java directory"
+        return
+    fi
+
+    # Detect current version via symlink
+    if [ -L "$sdk_java_dir/current" ]; then
+        local current
+        current=$(readlink "$sdk_java_dir/current" | xargs basename)
+        echo -e "     Current -> ${GREEN}$current${NC}"
+    fi
+
+    echo "     Installed versions:"
+
+    ls -1 "$sdk_java_dir" \
+        | grep -v current \
+        | sort -V \
+        | sed 's/^/       - /'
+}
+
+# --- Execution ---
+
+echo -e "${BLUE}${BOLD}System Development Environment Check${NC}"
+echo "------------------------------------------"
+
+ERRORS=0
+
+echo -e "\n${BOLD}Critical Infrastructure:${NC}"
+check_tool "sdk" "SDKMAN" true "version" || ((ERRORS++))
+check_tool "aws" "AWS CLI" true "--version" || ((ERRORS++))
+check_tool "mvn" "Maven" true "-version" || ((ERRORS++))
+check_tool "docker" "Docker" true "--version" || ((ERRORS++))
+check_tool "kubectl" "Kubernetes" true "version --client" || ((ERRORS++))
+check_tool "go" "Go Language" true "version" || ((ERRORS++))
+check_tool "nvm" "Node Version Manager" true "-v" || ((ERRORS++))
+
+check_java_runtime
+check_sdkman_java
+
+echo -e "\n${BOLD}Optional Workflow Tools:${NC}"
+check_tool "fzf" "Fuzzy Finder" false "--version"
+check_tool "ng" "Angular CLI" false "version"
+check_tool "starship" "Starship" false "--version"
+check_tool "eza" "Eza (ls+)" false "--version"
+check_tool "opencode" "OpenCode" false "-v"
+check_tool "bun" "Bun Runtime" false "-v"
+
+echo -e "\n------------------------------------------"
+
+[[ $ERRORS -gt 0 ]] && echo -e "${RED}${BOLD}STATUS: INCOMPLETE${NC}" && exit 1
+echo -e "${GREEN}${BOLD}STATUS: READY${NC}"

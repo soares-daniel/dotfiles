@@ -14,6 +14,3 @@ DOTFILES_CONTEXT="personal"
 
 # Source local overrides (never tracked)
 [[ -f ~/.bashrc.local ]] && source ~/.bashrc.local
-
-# Dev Tools CLI
-export PATH="$PATH:/home/d-a-soares/.local/bin"

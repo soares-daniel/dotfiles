@@ -74,41 +74,6 @@ try_source() {
   fi
 }
 
-# Safe command check
-require_cmd() {
-  local cmd="$1"
-  command -v "$cmd" >/dev/null 2>&1 || {
-    echo "[ERROR] Required command '$cmd' not found in PATH."
-  }
-}
-
-check_optional() {
-  local cmd="$1"
-  local label="${2:-$cmd}"
-
-  if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "[WARN] Optional component not found: ${label}"
-    return 1
-  fi
-}
-
-# Criticals
-require_cmd sdk
-require_cmd aws
-require_cmd mvn
-require_cmd docker
-require_cmd nvm
-require_cmd kubectl
-require_cmd go
-
-# Optionals
-check_optional fzf "fzf"
-check_optional ng "Angular CLI" && source <(ng completion script)
-check_optional starship "Starship prompt" && eval "$(starship init bash)"
-check_optional eza "eza"
-check_optional opencode "opencode" && opencode -v >/dev/null 2>&1
-check_optional bun "bun" && bun -v >/dev/null 2>&1
-
 # Eza aliases
 alias ls="eza --color=always --group-directories-first --icons"
 alias ll="eza -la --icons --octal-permissions --group-directories-first"
@@ -189,3 +154,5 @@ export PATH="$HOME/.bun/bin:$PATH"
 
 # Load Angular CLI autocompletion.
 source <(ng completion script)
+
+eval "$(starship init bash)"
