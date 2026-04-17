@@ -9,17 +9,12 @@ projroot=$HOME/softdev/code
 cddf() { cd "$projroot/ics2-ssa-data-factory" || return; }
 cdportal() {
   local script="$projroot/ics2-ssa-portal/ics2-ssa-dev-utils/ics2-ssa-installation-scripts.sh"
-  if [ -f "$script" ]; then
-    local script_dir
-    script_dir="$(dirname "$script")"
-    pushd "$script_dir" >/dev/null || return
-    source "$(basename "$script")"
-    popd >/dev/null || return
-    cd "$projroot/ics2-ssa-portal" || return
-  else
-    echo "Script not found: $script"
-  fi
+  [ -f "$script" ] || { echo "Script not found: $script"; return 1; }
+
+  source "$script" || return 1
+  cd "$projroot/ics2-ssa-portal" || return
 }
+
 gossaproject() { cd "$projroot/ics2-ssa-portal" || return; }
 
 cdansible() { cd "$projroot/ansible-common" && git pull || return; }
@@ -31,26 +26,6 @@ cddatalabdesign() { cd "$projroot/ics2-ssa-data-lab-design" || return; }
 cddatalabtools() { cd "$projroot/ics2-ssa-data-lab-tools" || return; }
 
 # AWS EKS / k9s Helpers
-eksuse() {
-  local cluster="d-ew1-ics2-ssa-$1-eks"
-  aws eks update-kubeconfig \
-    --region eu-west-1 \
-    --name "$cluster" \
-    --profile softdev-admin &&
-    echo "Switched kubeconfig to: $cluster"
-}
-
-alias k9s-dev1='eksuse ssa-dev1'
-alias k9s-dev2='eksuse ssa-dev2'
-alias k9s-dev3='eksuse ssa-dev3'
-alias k9s-dev4='eksuse ssa-dev4'
-alias k9s-dev5='eksuse ssa-dev5'
-alias k9s-devops='eksuse ssa-devops'
-alias k9s-arch='eksuse ssa-arch'
-alias k9s-prod='eksuse ssa-prod'
-alias k9s-pgs1='eksuse ssa-pgs1'
-alias k9s-int='eksuse ics2-int'
-alias kctx='kubectl config current-context'
 alias awswhoami='aws sts get-caller-identity && aws configure list'
 alias mfa='~/.aws/mfa.sh'
 
