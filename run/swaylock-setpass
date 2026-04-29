@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${EUID}" -ne 0 ]]; then
+  printf 'Run as root: sudo /usr/local/sbin/swaylock-setpass [username]\n' >&2
+  exit 1
+fi
+
+USER_NAME="${1:-${SUDO_USER:-}}"
+if [[ -z "$USER_NAME" ]]; then
+  printf 'Usage: sudo /usr/local/sbin/swaylock-setpass <username>\n' >&2
+  exit 1
+fi
+
+DB_BASE="/etc/security/swaylock-users"
+TMP_TXT="$(mktemp)"
+trap 'rm -f "$TMP_TXT"' EXIT
+
+read -r -s -p "New swaylock password for ${USER_NAME}: " PASS1
+printf '\n'
+read -r -s -p "Confirm password: " PASS2
+printf '\n'
+
+if [[ "$PASS1" != "$PASS2" ]]; then
+  printf 'Error: passwords do not match.\n' >&2
+  exit 1
+fi
+if [[ -z "$PASS1" ]]; then
+  printf 'Error: empty password not allowed.\n' >&2
+  exit 1
+fi
+
+HASH="$(openssl passwd -6 "$PASS1")"
+printf '%s\n%s\n' "$USER_NAME" "$HASH" > "$TMP_TXT"
+
+umask 022
+db_load -T -t hash -f "$TMP_TXT" "$DB_BASE"
+# pam_userdb can resolve either base or base.db depending on backend; keep both synced
+cp -f "$DB_BASE" "$DB_BASE.db"
+chown root:root "$DB_BASE" "$DB_BASE.db"
+chmod 0644 "$DB_BASE" "$DB_BASE.db"
+
+printf 'Updated swaylock password DB for %s (files: %s and %s.db)\n' "$USER_NAME" "$DB_BASE" "$DB_BASE"

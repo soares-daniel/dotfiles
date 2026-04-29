@@ -1,0 +1,4 @@
+#%PAM-1.0
+# swaylock auth: custom DB password OR normal login password
+auth    sufficient pam_userdb.so db=/etc/security/swaylock-users crypt=crypt
+auth    include login
