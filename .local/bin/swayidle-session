@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Ensure only one swayidle instance survives config reloads.
+pkill -x swayidle || true
+
+exec swayidle -w \
+  timeout 120 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
+  timeout 300 'swaylock -f' \
+  timeout 600 '~/.local/bin/sway-suspend-if-not-ac' \
+  before-sleep 'swaylock -f'

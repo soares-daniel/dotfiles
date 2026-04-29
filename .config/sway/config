@@ -37,7 +37,7 @@ set $right l
 
 # Start
 exec dunst
-exec_always "systemctl --user restart kanshi.service"
+exec --no-startup-id "systemctl --user start kanshi.service"
 exec_always --no-startup-id ~/.config/sway/scripts/battery-low-notify.sh
 exec_always --no-startup-id ~/.config/sway/scripts/low_bat_notifier.sh
 exec_always --no-startup-id ~/.local/bin/edge_override_pwa_launcher
@@ -56,12 +56,12 @@ include /etc/sway/config-vars.d/*
 output * bg /usr/share/backgrounds/sway/black.jpeg fill
 
 ### Idle configuration
-# Lock screen after 300 seconds of inactivity ,then turn displays off after another 300 seconds. Lock screen before sleep
-exec swayidle -w \
-          timeout 300 'swaylock' \
-          timeout 600 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
-          timeout 900 'systemctl suspend' \
-          before-sleep 'swaylock'
+# Idle policy:
+# - 2 min: power off outputs (black screen)
+# - 5 min: lock session
+# - 10 min: suspend (only if on battery mode)
+# Use exec_always script wrapper so reload actually replaces swayidle timers.
+exec_always --no-startup-id ~/.local/bin/swayidle-session
 
 ### Status Bar:
 bar {

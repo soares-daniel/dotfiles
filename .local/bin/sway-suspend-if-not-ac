@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+is_ac_online() {
+  local supply
+  for supply in AC ADP1 ACAD; do
+    if [[ "$(cat "/sys/class/power_supply/${supply}/online" 2>/dev/null || true)" == "1" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+if is_ac_online; then
+  exit 0
+else
+  if [[ "${SWAY_SUSPEND_DRY_RUN:-0}" == "1" ]]; then
+    exit 0
+  else
+    exec systemctl suspend
+  fi
+fi
