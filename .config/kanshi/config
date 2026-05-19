@@ -1,9 +1,9 @@
-# HOME: DP-2 4K center @60 (stability baseline), DP-1 1440p above; laptop off (omit eDP-1)
+# HOME: DP-1 4K center @60 (stability baseline), DP-2 1440p above; laptop off (omit eDP-1)
 profile home_dual {
   output eDP-1 disable
-  output DP-2 mode 3840x2160@59.997 position 0,0 scale 1
-  # center DP-1 over DP-2: (3840-2560)/2 = 640, y = -1440
-  output DP-1 mode 2560x1440@143.999 position 640,-1440 scale 1
+  output DP-1 mode 3840x2160@59.997 position 0,0 scale 1
+  # center DP-2 over DP-1: (3840-2560)/2 = 640, y = -1440
+  output DP-2 mode 2560x1440@143.999 position 640,-1440 scale 1
 }
 
 # WORK: single 4K @60; laptop off (omit eDP-1)
