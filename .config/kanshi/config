@@ -1,15 +1,16 @@
-# HOME: DP-1 4K center @60 (stability baseline), DP-2 1440p above; laptop off (omit eDP-1)
+# HOME: 4K OLED center @60, 1440p above; laptop off
+# Uses stable monitor identifiers (not DP-x port names) because port names swap on reconnect
 profile home_dual {
   output eDP-1 disable
-  output DP-1 mode 3840x2160@59.997 position 0,0 scale 1
-  # center DP-2 over DP-1: (3840-2560)/2 = 640, y = -1440
-  output DP-2 mode 2560x1440@143.999 position 640,-1440 scale 1
+  output "Microstep MPG321UX OLED " mode 3840x2160@59.997 position 0,0 scale 1
+  # center 1440p over 4K: (3840-2560)/2 = 640, y = -1440
+  output "Microstep MSI MPG27CQ 0x00000163" mode 2560x1440@143.999 position 640,-1440 scale 1
 }
 
-# WORK: single 4K @60; laptop off (omit eDP-1)
+# WORK: Samsung 4K @60; laptop off
 profile work_single {
   output eDP-1 disable
-  output DP-1 position 0,0
+  output "Samsung Electric Company LS32D80xU HK2Y500011" mode 3840x2160@59.997 position 0,0 scale 1
 }
 
 # LAPTOP-ONLY: just eDP-1

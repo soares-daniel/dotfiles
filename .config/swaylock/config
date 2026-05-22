@@ -5,15 +5,14 @@ clock
 timestr=%H:%M:%S
 datestr=%a, %d %b %Y
 
-screenshots
+# Solid black background — no screenshots/blur to avoid OLED burn-in.
+# Monitors stay connected (no DPMS power off) so kanshi never races.
+color=000000
 
 font=sans-serif
 font-size=32
 
 fade-in=0.15
-
-effect-blur=10x15
-effect-scale=0.1
 
 indicator
 indicator-radius=150

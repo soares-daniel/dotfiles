@@ -4,8 +4,15 @@ set -euo pipefail
 # Ensure only one swayidle instance survives config reloads.
 pkill -x swayidle || true
 
+# Idle policy:
+# - 2 min: lock session (swaylock shows solid black — OLED-safe, no DPMS)
+# - 10 min: suspend (only on battery)
+# - before-sleep: always lock
+#
+# No DPMS power off/on — monitors stay connected so kanshi never sees
+# a hotplug disconnect, eliminating the race condition that caused
+# screens to not wake up.
 exec swayidle -w \
-  timeout 120 'swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
-  timeout 300 'swaylock -f' \
+  timeout 120 'swaylock -f' \
   timeout 600 '~/.local/bin/sway-suspend-if-not-ac' \
   before-sleep 'swaylock -f'
