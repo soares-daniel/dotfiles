@@ -1,0 +1,26 @@
+#!/bin/bash
+# ~/.config/tmux/bin/tmux-new-k8s
+# Creates or attaches to a k9s/kubectl session for an SSA environment.
+
+env="$1"
+session="k9s-$env"
+
+if tmux has-session -t "$session" 2>/dev/null; then
+  if [ -n "$TMUX" ]; then
+    tmux switch-client -t "$session"
+  else
+    tmux attach-session -t "$session"
+  fi
+else
+  tmux new-session -d -s "$session" -n k9s
+  tmux send-keys -t "$session:k9s" "ssa cluster -e $env --open" Enter
+
+  tmux new-window -t "$session" -n kubectl
+  tmux send-keys -t "$session:kubectl" "ssa cluster -e $env" Enter
+
+  if [ -n "$TMUX" ]; then
+    tmux switch-client -t "$session"
+  else
+    tmux attach-session -t "$session"
+  fi
+fi

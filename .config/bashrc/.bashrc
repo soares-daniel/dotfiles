@@ -14,3 +14,5 @@ DOTFILES_CONTEXT="personal"
 
 # Source local overrides (never tracked)
 [[ -f ~/.bashrc.local ]] && source ~/.bashrc.local
+
+alias cddatafactory="cd ~/softdev/code/ics2-ssa-data-factory"

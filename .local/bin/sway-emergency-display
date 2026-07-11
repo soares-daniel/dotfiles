@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Emergency display recovery during lock screen.
+# If the laptop panel is black because the dock was unplugged while
+# locked, this force-enables eDP-1 and restarts kanshi so you can
+# see the lock screen again and type your password.
+
+# Force-enable the laptop panel first.
+swaymsg 'output eDP-1 enable' 2>/dev/null || true
+
+# Restart kanshi so it applies the correct profile for whatever
+# outputs are actually connected.
+systemctl --user restart kanshi.service 2>/dev/null || true

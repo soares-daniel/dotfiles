@@ -1,0 +1,13 @@
+#!/bin/bash
+# ~/.config/tmux/bin/tmux-switch-session-fzf
+# Fuzzy picker for switching between existing tmux sessions.
+
+session=$(
+  tmux list-sessions -F '#S' \
+    | sort \
+    | fzf --prompt="Session: " \
+          --height=100% \
+          --layout=reverse
+)
+
+[[ -n "$session" ]] && tmux switch-client -t "$session"

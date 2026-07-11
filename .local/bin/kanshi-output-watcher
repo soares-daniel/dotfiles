@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Watch Sway output (hotplug) events and restart kanshi so it re-applies
+# the correct profile. This handles dock disconnects that happen while the
+# session is locked (swaylock) where kanshi might otherwise miss the event.
+#
+# We only restart kanshi if it is already active. This avoids a race with
+# swayidle, which intentionally stops kanshi before DPMS-off.
+
+while true; do
+    # Block until an output event fires.
+    if ! swaymsg -t subscribe '["output"]' >/dev/null 2>&1; then
+        # Sway not running yet; back off and retry.
+        sleep 5
+        continue
+    fi
+
+    # Debounce: rapid-fire events often come in bursts.
+    sleep 1
+
+    # Only restart kanshi when it is already running. If swayidle has
+    # intentionally stopped it for DPMS, leave it stopped.
+    if systemctl --user is-active --quiet kanshi.service 2>/dev/null; then
+        systemctl --user restart kanshi.service
+    fi
+done

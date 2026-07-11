@@ -9,3 +9,5 @@ history.txt
 bashrc/.bashrc.local
 zshrc/.zshrc.local
 virtio-win-0.1.285.iso
+/.config/tmux/plugins
+/.config/tmux/resurrect

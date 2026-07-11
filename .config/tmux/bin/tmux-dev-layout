@@ -1,0 +1,10 @@
+#!/bin/bash
+# ~/.config/tmux/bin/tmux-dev-layout
+# Applies the portal-style 3-pane layout to the current window.
+
+current_path="#{pane_current_path}"
+
+tmux split-window -h -c "$current_path"
+tmux split-window -v -t 2 -c "$current_path"
+tmux select-layout main-vertical
+tmux resize-pane -t 1 -x 50%

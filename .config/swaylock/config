@@ -6,7 +6,7 @@ timestr=%H:%M:%S
 datestr=%a, %d %b %Y
 
 # Solid black background — no screenshots/blur to avoid OLED burn-in.
-# Monitors stay connected (no DPMS power off) so kanshi never races.
+# Clock/indicator are only visible for ~3 min before DPMS powers off monitors.
 color=000000
 
 font=sans-serif

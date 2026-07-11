@@ -1,0 +1,14 @@
+#!/bin/bash
+# ~/.config/tmux/bin/tmux-new-project-fzf
+# Fuzzy picker for work projects under ~/softdev/code.
+
+path=$(
+  find ~/softdev/code -maxdepth 1 -mindepth 1 -type d \
+    | sort \
+    | fzf --prompt="Project: " \
+          --preview 'ls -la {} | head -20' \
+          --height=100% \
+          --layout=reverse
+)
+
+[[ -n "$path" ]] && ~/.config/tmux/bin/tmux-new-project "$path"

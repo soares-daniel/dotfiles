@@ -37,12 +37,13 @@ set $right l
 
 # Start
 exec dunst
-exec --no-startup-id "systemctl --user start kanshi.service"
+exec_always --no-startup-id "systemctl --user restart kanshi.service"
+exec_always --no-startup-id "systemctl --user start kanshi-output-watcher.service"
 exec_always --no-startup-id ~/.config/sway/scripts/battery-low-notify.sh
 exec_always --no-startup-id ~/.config/sway/scripts/low_bat_notifier.sh
 exec_always --no-startup-id ~/.local/bin/edge_override_pwa_launcher
 # Terminal emulator
-set $term wezterm
+set $term ghostty
 
 # Application launcher
 set $menu fuzzel
@@ -111,6 +112,9 @@ client.background n/a #1a1a1f n/a
     # Kill focused window
     bindsym $mod+Shift+q kill
 
+    # Rescue the stuck AWS VPN Client window manually.
+    bindsym $mod+Shift+x exec ~/.local/bin/sway-fix-aws-vpn
+
     # Start launcher
     bindsym $mod+d exec $menu
 
@@ -127,6 +131,9 @@ client.background n/a #1a1a1f n/a
     # Exit sway (logs you out of your Wayland session)
     #bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
     bindsym $mod+Shift+e exec wlogout
+
+    # Emergency display recovery during lock (black screen after dock disconnect)
+    bindsym --locked Ctrl+Alt+Delete exec ~/.local/bin/sway-emergency-display
 
     # Open browser (Note: Might need scale script in .local/bin if new browser, currently only supported for edge)
     bindsym $mod+b exec ~/.local/bin/$browser
@@ -307,7 +314,7 @@ bindsym $mod+Shift+p mode "$mode_screenshot"
 
 ### Workspace assignment rules ###
 assign [app_id="microsoft-edge"] workspace number 1
-assign [app_id="org.wezfurlong.wezterm"] workspace number 2
+assign [app_id="com.mitchellh.ghostty"] workspace number 2
 assign [app_id="jetbrains-idea" floating="no"] workspace number 3
 assign [app_id="msedge-_cifhbcnohmdccbgoicgdjpfamggdegmo-Default"] workspace number 6
 
@@ -315,8 +322,8 @@ assign [app_id="msedge-_cifhbcnohmdccbgoicgdjpfamggdegmo-Default"] workspace num
 # Browser
 exec --no-startup-id microsoft-edge-stable
 # Terminal
-exec --no-startup-id wezterm
-# IntelliJ IDEA
-exec --no-startup-id idea
+exec --no-startup-id ghostty
+# IntelliJ IDEA (native Wayland wrapper)
+exec --no-startup-id idea-wayland
 # Teams PWA inside Edge profile
 exec --no-startup-id microsoft-edge-stable --app-id=_cifhbcnohmdccbgoicgdjpfamggdegmo

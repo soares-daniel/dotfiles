@@ -5,15 +5,18 @@ profile home_dual {
   output "Microstep MPG321UX OLED " mode 3840x2160@59.997 position 0,0 scale 1
   # center 1440p over 4K: (3840-2560)/2 = 640, y = -1440
   output "Microstep MSI MPG27CQ 0x00000163" mode 2560x1440@143.999 position 640,-1440 scale 1
+  exec sway-fix-aws-vpn
 }
 
 # WORK: Samsung 4K @60; laptop off
 profile work_single {
   output eDP-1 disable
   output "Samsung Electric Company LS32D80xU HK2Y500011" mode 3840x2160@59.997 position 0,0 scale 1
+  exec sway-fix-aws-vpn
 }
 
 # LAPTOP-ONLY: just eDP-1
 profile laptop_only {
   output eDP-1 position 0,0
+  exec sway-fix-aws-vpn
 }

@@ -1,0 +1,21 @@
+#!/bin/bash
+# ~/.config/tmux/bin/tmux-new-project
+# Creates a new window in the 'dev' session for the given project directory.
+
+path="$1"
+name=$(basename "$path")
+
+# Ensure the dev session exists
+if ! tmux has-session -t dev 2>/dev/null; then
+  ~/.config/tmux/bootstrap.sh
+fi
+
+# Create a new window in the dev session
+tmux new-window -t dev -n "$name" -c "$path"
+
+# Switch to the new window
+if [ -n "$TMUX" ]; then
+  tmux switch-client -t dev:"$name"
+else
+  tmux attach-session -t dev:"$name"
+fi

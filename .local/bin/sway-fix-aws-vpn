@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Reset the AWS VPN Client floating window state on Sway.
+# This works around a bug where the window becomes unresponsive to
+# mouse input after output hotplug or screen lock/unlock.
+
+# Only run if the AWS VPN Client window actually exists.
+window_json=$(swaymsg -t get_tree | jq '.. | objects | select(.app_id=="AWS VPN Client")' 2>/dev/null || true)
+if [ -z "$window_json" ] || [ "$window_json" = "null" ]; then
+    exit 0
+fi
+
+# Save current workspace so we can restore it after toggling floating.
+workspace=$(echo "$window_json" | jq -r '.workspace_name // empty')
+
+# Give the compositor/app a moment to settle after output change.
+sleep 0.5
+
+# Toggle floating to fix input responsiveness.
+swaymsg '[app_id="AWS VPN Client"] floating disable'
+swaymsg '[app_id="AWS VPN Client"] floating enable'
+swaymsg '[app_id="AWS VPN Client"] resize set 900 600'
+
+# Restore the window to its original workspace so it doesn't jump
+to whichever workspace is currently focused.
+if [ -n "$workspace" ] && [ "$workspace" != "null" ]; then
+    swaymsg "[app_id=\"AWS VPN Client\"] move window to workspace \"$workspace\""
+fi

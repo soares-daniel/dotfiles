@@ -7,16 +7,16 @@
 
 "modules-left": ["sway/mode","cpu","memory","network","mpd"],
 "modules-center": ["sway/workspaces","hyprland/workspaces"],
-"modules-right":  ["tray","idle_inhibitor","pulseaudio","backlight","battery","clock"],
+"modules-right":  ["tray","pulseaudio","backlight","battery","clock"],
 
 "battery": {
   "states": {
   "warning": 30,
   "critical": 15
   },
-  "format": "{icon}&#8239;{capacity}%",
-  "format-charging": "&#8239;{capacity}%",
-  "format-plugged": "&#8239;{capacity}%",
+  "format": "{icon} {capacity}%",
+  "format-charging": " {capacity}%",
+  "format-plugged": " {capacity}%",
   "format-alt": "{icon} {time}",
   "format-icons": ["", "", "", "", ""]
 },
@@ -66,13 +66,6 @@
   "min-length": 6,
   "format-alt": "{essid}",
 },
-"idle_inhibitor": {
-    "format": "{icon}",
-    "format-icons": {
-        "activated": "",
-        "deactivated": ""
-    }
-},
 "backlight": {
     // "device": "acpi_video1",
     "format": "{icon}&#8239;{percent}%",
@@ -84,8 +77,8 @@
   // "scroll-step": 1, // %, can be a float
   "format": "{icon} {volume}% {format_source}",
   "format-bluetooth": "{icon} {volume}% {format_source}",
-  "format-bluetooth-muted": " {format_source}",
-  "format-muted": " {format_source}",
+"format-bluetooth-muted": " {format_source}",
+"format-muted": " {format_source}",
   "format-source": " {volume}%",
   "format-source-muted": "",
   "format-icons": {
