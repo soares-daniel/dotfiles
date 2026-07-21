@@ -1,0 +1,11 @@
+# ~/.config/tmux/tmux.conf.work
+# Work-machine-specific tmux bindings.
+# Only sourced when $HOME/softdev exists (work context).
+
+# k8s session launcher
+bind k command-prompt -p "k8s env:" "run-shell '~/.config/tmux/bin/tmux-new-k8s %1'"
+bind C-k command-prompt -p "k8s env:" "run-shell '~/.config/tmux/bin/tmux-new-k8s %1'"
+
+# Dev layout (portal-style 3-pane layout for work projects)
+bind m run-shell '~/.config/tmux/bin/tmux-dev-layout'
+bind C-m run-shell '~/.config/tmux/bin/tmux-dev-layout'

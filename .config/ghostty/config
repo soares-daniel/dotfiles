@@ -1,4 +1,5 @@
 # ~/.config/ghostty/config
+# macOS-specific options: macos-titlebar-style
 
 # --- Theme -------------------------------------------------------------
 theme = Kanagawa Wave
@@ -17,16 +18,14 @@ cursor-style-blink = true
 # --- Window / tabs -----------------------------------------------------
 window-padding-x = 2
 window-padding-y = 2
-gtk-titlebar-style = native
-# tmux provides the tab bar; hide native GTK tabs
-gtk-tabs-location = hidden
+macos-titlebar-style = native
 window-theme = ghostty
 
 # --- Scrollback --------------------------------------------------------
 scrollbar = system
 
 # --- Shell / tmux integration ------------------------------------------
-command = /bin/bash -c '~/.config/tmux/bootstrap.sh; tmux attach -t dev'
+command = /bin/bash -c '~/.config/tmux/bootstrap.sh'
 working-directory = ~
 
 # Inherit cwd for new tabs/splits

@@ -1,4 +1,6 @@
 # Tmux cheat sheet — prefix is Ctrl+Space
+# NOTE: `k` (k8s) and `m` (dev layout) are WORK-ONLY bindings. On personal machines these are unbound.
+
 
 ## Sessions
 - `s`  fuzzy switch session

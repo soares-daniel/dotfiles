@@ -5,6 +5,22 @@
 stow .
 ```
 
+Or use the helper script (handles conflicts, preflight, ownership):
+```bash
+./run/setup.sh
+```
+
+### Top-level stow packages
+| Package | Target | Purpose |
+| --- | --- | --- |
+| `.config/` | `~/.config/` | Tracked config directories (nvim, tmux, wezterm, zsh, …) |
+| `bashrc/`, `zshrc/` | `~/` | Shell rc symlinks (created by `run/setup.sh`) |
+| `.local/` | `~/.local/` | User scripts and binaries |
+| `opencode/` | `~/.config/opencode/` | OpenCode config JSONs (plugin-managed `skills/` is gitignored) |
+| `agents/` | `~/.agents/` | Personal skills auto-loaded by opencode from `~/.agents/skills/<name>/SKILL.md` |
+
+Adding a new skill: create `agents/skills/<name>/SKILL.md`, then re-run `./run/setup.sh` (or `stow --target=$HOME/.agents -d . agents`) and restart opencode.
+
 ### Swaylock custom auth (system-level)
 These files are versioned under `run/` for reproducible setup on a new machine:
 

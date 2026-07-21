@@ -11,3 +11,13 @@ zshrc/.zshrc.local
 virtio-win-0.1.285.iso
 /.config/tmux/plugins
 /.config/tmux/resurrect
+
+# opencode/ package (plugin-managed content, not tracked)
+opencode/skills/
+opencode/node_modules/
+opencode/package.json
+opencode/package-lock.json
+opencode/bun.lock
+opencode/.oh-my-opencode-slim/
+opencode/*.bak
+opencode/*.backup-*

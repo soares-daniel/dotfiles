@@ -1,0 +1,4 @@
+# ~/.config/tmux/tmux.conf.personal
+# Personal-machine-specific tmux configuration.
+# Only sourced on machines without $HOME/softdev.
+# Add personal bindings and customizations here.

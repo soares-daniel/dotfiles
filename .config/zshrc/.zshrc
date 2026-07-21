@@ -24,3 +24,6 @@ DOTFILES_CONTEXT="personal"
 
 # Dev Tools CLI
 export PATH="$PATH:/home/d-a-soares/.local/bin"
+
+# oh-my-opencode-slim background subagents
+export OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true

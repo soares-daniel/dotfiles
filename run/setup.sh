@@ -177,4 +177,30 @@ if [[ -d "$REPO_DIR/.local/bin" ]]; then
   find "$REPO_DIR/.local/bin" -type f -exec chmod +x {} \;
 fi
 
+# Stow opencode config (separate package to keep opencode-specific ignores isolated)
+if [[ -d "$REPO_DIR/opencode" ]]; then
+  echo "Stowing opencode → ~/.config/opencode"
+  mkdir -p "$HOME/.config/opencode"
+
+  if preflight_simulate "opencode" "$HOME/.config/opencode"; then
+    stow_pkg "opencode" "$HOME/.config/opencode"
+  else
+    echo "ERROR: Conflicts remain for opencode. Resolve and re-run."
+    exit 1
+  fi
+fi
+
+# Stow agents (user-authored skills; opencode auto-loads from ~/.agents/skills/)
+if [[ -d "$REPO_DIR/agents" ]]; then
+  echo "Stowing agents → ~/.agents"
+  mkdir -p "$HOME/.agents"
+
+  if preflight_simulate "agents" "$HOME/.agents"; then
+    stow_pkg "agents" "$HOME/.agents"
+  else
+    echo "ERROR: Conflicts remain for agents. Resolve and re-run."
+    exit 1
+  fi
+fi
+
 echo "Symlink setup complete."
