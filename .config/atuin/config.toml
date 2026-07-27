@@ -1,0 +1,48 @@
+# Atuin configuration
+# https://docs.atuin.sh/configuration/config/
+
+# History search mode: "fuzzy" (default), "skim", or "exact"
+search_mode = "fuzzy"
+
+# Filter mode: "global" (all sessions), "session" (current session), "host" (current host), or "directory"
+filter_mode = "global"
+
+# UI style: "auto", "compact", or "full"
+style = "auto"
+
+# Show preview of selected entry
+show_preview = true
+
+# Accept selection on Enter (vs requiring a second keypress)
+enter_accept = true
+
+# Keyboard dialect: "us", "de", "fr", etc.
+dialect = "us"
+
+# Format for inline history display
+# Available placeholders: {time}, {command}, {directory}, {host}, {session}, {duration}
+history_format = "{time} · {command}"
+
+# Keybindings
+# Ctrl+r opens the history search UI, up-arrow is left untouched
+keys = { search = "CtrlR" }
+
+# Secret key is auto-generated at ~/.local/share/atuin/login.shadow
+# Sync configuration (uncomment if you register/login for cloud sync):
+# sync_address = "https://api.atuin.sh"
+# sync_frequency = "1h"
+
+# Secret key (leave empty — auto-generated on first sync)
+# secret_key = ""
+
+# Inline mode: show history suggestions as you type (experimental)
+inline_height = 0
+
+# Auto-remove duplicates from history
+auto_sync = true
+
+# Exit immediately when only one match remains
+exit_mode = "return-original"
+
+# Show tab completion for atuin's own commands (not shell history)
+show_tab = false

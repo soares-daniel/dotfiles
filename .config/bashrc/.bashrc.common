@@ -11,12 +11,14 @@ case $- in
 *) return ;;
 esac
 
-# don't put duplicate lines or lines starting with space in the history
-HISTCONTROL=ignoreboth
+# History settings
+HISTSIZE=10000
+HISTFILESIZE=20000
+HISTCONTROL=ignoreboth:erasedups
 shopt -s histappend
-HISTSIZE=1000
-HISTFILESIZE=2000
 shopt -s checkwinsize
+# Append to history, clear and re-read to sync across sessions
+PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; history -r"
 
 # make less more friendly for non-text input files
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
@@ -156,3 +158,10 @@ export PATH="$HOME/.bun/bin:$PATH"
 source <(ng completion script)
 
 eval "$(starship init bash)"
+
+# Atuin (shell history)
+export PATH="$HOME/.atuin/bin:$PATH"
+if command -v atuin >/dev/null 2>&1; then
+  [[ -f ~/.bash-preexec.sh ]] && source ~/.bash-preexec.sh
+  eval "$(atuin init bash --disable-up-arrow)"
+fi

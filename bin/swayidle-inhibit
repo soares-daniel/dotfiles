@@ -1,0 +1,99 @@
+#!/bin/sh
+# swayidle-inhibit - heartbeat script called by idlehack
+# https://github.com/loops/idlehack
+#
+# Temporarily disables swayidle while video is playing (Chrome/Firefox).
+#
+# Idlehack calls this as:  swayidle-inhibit [-quiet|-verbose] -deactivate
+# while the browser is playing video, every ~50 seconds (heartbeat).
+# When video stops, the calls cease and the timer below restarts swayidle.
+#
+# Strategy: kill swayidle and save its raw /proc/PID/cmdline (null-separated
+# args).  Start a 65-second background timer that restarts swayidle when it
+# fires.  Each heartbeat call kills the previous timer and starts a new one,
+# so swayidle stays killed as long as video plays.
+# After the last heartbeat, the timer fires ~65s later and restarts swayidle
+# fresh (zero idle time) using xargs -0 to preserve argument boundaries.
+
+set -e
+
+SWAYIDLE_RAW="${XDG_RUNTIME_DIR:-/tmp}/swayidle-cmdline.raw"
+SWAYIDLE_LOCK="${XDG_RUNTIME_DIR:-/tmp}/swayidle-inhibit.lock"
+TIMER_PID="${XDG_RUNTIME_DIR:-/tmp}/swayidle-timer.pid"
+
+# ------------------------------------------------------------------
+# Helpers
+# ------------------------------------------------------------------
+
+kill_timer() {
+    if [ -f "$TIMER_PID" ]; then
+        pid=$(cat "$TIMER_PID" 2>/dev/null || echo 0)
+        if [ "$pid" -gt 0 ] 2>/dev/null; then
+            kill "$pid" 2>/dev/null || true
+        fi
+        rm -f "$TIMER_PID"
+    fi
+}
+
+restore_swayidle() {
+    if [ -f "$SWAYIDLE_RAW" ]; then
+        # Restore using the raw null-separated cmdline from /proc/PID/cmdline.
+        # xargs -0 reads null-separated args, and using 'sh -c "exec $@"' passes
+        # them through without reinterpreting shell metacharacters (;, &&, quotes).
+        xargs -0 -a "$SWAYIDLE_RAW" sh -c 'exec "$@"' -- >/dev/null 2>&1 &
+        # Brief wait so swayidle can start and claim the swayidle process name
+        # before we remove the raw file (not strictly needed, but clean).
+        sleep 0.2
+    fi
+}
+
+start_timer() {
+    kill_timer
+    (
+        # Wait 65 s.  Idlehack heartbeats every ~50 s, so as long as
+        # video is playing this timer keeps getting killed and recreated.
+        sleep 65
+        if [ -f "$SWAYIDLE_LOCK" ]; then
+            restore_swayidle
+            rm -f "$SWAYIDLE_LOCK" "$SWAYIDLE_RAW"
+        fi
+        rm -f "$TIMER_PID"
+    ) >/dev/null 2>&1 &
+    echo "$!" > "$TIMER_PID"
+}
+
+# ------------------------------------------------------------------
+# Determine which action idlehack is asking for
+# ------------------------------------------------------------------
+action=""
+for _arg; do
+    case "$_arg" in
+        -deactivate) action="deactivate" ;;
+        -suspend)    action="suspend" ;;
+    esac
+done
+
+case "$action" in
+    deactivate)
+        # ---- VIDEO PLAYING: kill swayidle, extend timer ----
+        pid=$(pgrep -x swayidle 2>/dev/null || echo 0)
+        if [ "$pid" -gt 0 ] 2>/dev/null; then
+            # Save raw command line (null-separated args) — only once
+            if [ ! -f "$SWAYIDLE_RAW" ]; then
+                cp "/proc/$pid/cmdline" "$SWAYIDLE_RAW"
+            fi
+            kill "$pid" 2>/dev/null || true
+        fi
+        : > "$SWAYIDLE_LOCK"
+        start_timer
+        ;;
+    *)
+        # ---- VIDEO STOPPED / SYSTEM SUSPEND: resume swayidle ----
+        kill_timer
+        if [ -f "$SWAYIDLE_LOCK" ]; then
+            rm -f "$SWAYIDLE_LOCK"
+            restore_swayidle
+            rm -f "$SWAYIDLE_RAW"
+        fi
+        ;;
+esac

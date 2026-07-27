@@ -16,3 +16,4 @@ DOTFILES_CONTEXT="personal"
 [[ -f ~/.bashrc.local ]] && source ~/.bashrc.local
 
 alias cddatafactory="cd ~/softdev/code/ics2-ssa-data-factory"
+

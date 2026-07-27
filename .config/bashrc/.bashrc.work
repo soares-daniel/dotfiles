@@ -99,7 +99,20 @@ mciskip() {
   fi
 }
 
-alias fix-dns="sudo resolvectl dns wlp0s20f3 10.0.64.245 10.0.64.151"
+fix-dns() {
+  local route vpn_if
+  route=$(ip -o route get 10.0.64.245 2>/dev/null) || {
+    echo "AWS VPN DNS is unreachable; connect the VPN first."
+    return 1
+  }
+  vpn_if=${route#* dev }
+  vpn_if=${vpn_if%% *}
+
+  sudo resolvectl dns "$vpn_if" 10.0.64.245 10.0.64.151 &&
+    sudo resolvectl domain "$vpn_if" '~.' &&
+    sudo resolvectl default-route "$vpn_if" yes &&
+    sudo resolvectl flush-caches
+}
 alias fix-docker="echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward"
 
 # Overwrites

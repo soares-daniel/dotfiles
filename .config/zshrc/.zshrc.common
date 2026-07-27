@@ -1,5 +1,11 @@
 # ~/.zshrc.common: Shared configuration across all machines
 
+# History settings
+HISTSIZE=10000
+SAVEHIST=10000
+HISTFILE=~/.zsh_history
+setopt SHARE_HISTORY INC_APPEND_HISTORY HIST_IGNORE_DUPS HIST_IGNORE_SPACE EXTENDED_HISTORY
+
 # Language environment
 export LANG=en_US.UTF-8
 
@@ -92,3 +98,9 @@ alias cl='clear'
 
 # Dev Tools CLI
 export PATH="$PATH:$HOME/.local/bin"
+
+# Atuin (shell history)
+export PATH="$HOME/.atuin/bin:$PATH"
+if command -v atuin >/dev/null 2>&1; then
+  eval "$(atuin init zsh --disable-up-arrow)"
+fi
