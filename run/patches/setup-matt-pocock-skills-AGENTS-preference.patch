@@ -1,0 +1,26 @@
+--- /tmp/opencode/skills-matt/skills/engineering/setup-matt-pocock-skills/SKILL.md	2026-08-22 19:38:14.069453483 +0200
++++ agents/skills/setup-matt-pocock-skills/SKILL.md	2026-08-22 19:23:36.621344371 +0200
+@@ -21,7 +21,7 @@
+ Look at the current repo to understand its starting state. Read whatever exists; don't assume:
+ 
+ - `git remote -v` and `.git/config`: is this a GitHub repo? Which one?
+-- `AGENTS.md` and `CLAUDE.md` at the repo root: does either exist? Is there already an `## Agent skills` section in either?
++- `AGENTS.md` and `CLAUDE.md` at the repo root: does either exist? Is there already an `## Agent skills` section in either? Prefer `AGENTS.md` when both exist; it is the harness-agnostic name.
+ - `CONTEXT.md` and `CONTEXT-MAP.md` at the repo root
+ - `docs/adr/` and any `src/*/docs/adr/` directories
+ - `docs/agents/`: does this skill's prior output already exist?
+@@ -73,11 +73,11 @@
+ 
+ **Pick the file to edit:**
+ 
+-- If `CLAUDE.md` exists, edit it.
+-- Else if `AGENTS.md` exists, edit it.
++- If `AGENTS.md` exists, edit it.
++- Else if `CLAUDE.md` exists, edit it.
+ - If neither exists, ask the user which one to create; don't pick for them.
+ 
+-Never create `AGENTS.md` when `CLAUDE.md` already exists (or vice versa); always edit the one that's already there.
++Never create `AGENTS.md` when `CLAUDE.md` already exists (or vice versa); always edit the one that's already there. Prefer `AGENTS.md` when both are present because it is the harness-agnostic name.
+ 
+ If an `## Agent skills` block already exists in the chosen file, update its contents in-place rather than appending a duplicate. Don't overwrite user edits to the surrounding sections.
+ 

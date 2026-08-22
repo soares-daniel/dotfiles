@@ -17,9 +17,9 @@ Or use the helper script (handles conflicts, preflight, ownership):
 | `bashrc/`, `zshrc/` | `~/` | Shell rc symlinks (created by `run/setup.sh`) |
 | `.local/` | `~/.local/` | User scripts and binaries |
 | `opencode/` | `~/.config/opencode/` | OpenCode config JSONs (plugin-managed `skills/` is gitignored) |
-| `agents/` | `~/.agents/` | Personal skills auto-loaded by opencode from `~/.agents/skills/<name>/SKILL.md` |
+| `agents/` | `~/.agents/` plus harness paths | Portable skills and shared engineering policy; see [agents/README.md](agents/README.md) |
 
-Adding a new skill: create `agents/skills/<name>/SKILL.md`, then re-run `./run/setup.sh` (or `stow --target=$HOME/.agents -d . agents`) and restart opencode.
+Adding a new skill: create `agents/skills/<name>/SKILL.md`, then re-run `./run/setup.sh` and restart the harness. See [agents/README.md](agents/README.md) for the skill inventory, runtime mapping, and update process.
 
 ### Swaylock custom auth (system-level)
 These files are versioned under `run/` for reproducible setup on a new machine:

@@ -78,6 +78,29 @@ if is_wsl || is_windows; then
     backup_if_conflict "$tgt"
     install -m 0644 "$f" "$tgt"
   done
+
+  # Copy portable agent configuration so it is not skipped in copy mode.
+  # This mirrors the repo's skills into ~/.agents/skills, removing anything not
+  # present in the repo. Keep separate plugin/harness-specific skills elsewhere.
+  if [[ -d "$REPO_DIR/agents/skills" ]]; then
+    echo "Copying agents/skills → ~/.agents/skills"
+    mkdir -p "$HOME/.agents/skills"
+    rsync -a --info=name0,progress2 --delete \
+      "$REPO_DIR/agents/skills/" "$HOME/.agents/skills/"
+  fi
+
+  if [[ -f "$REPO_DIR/agents/AGENTS.md" ]]; then
+    for tgt_dir in "$HOME/.config/opencode" "$HOME/.codex"; do
+      mkdir -p "$tgt_dir"
+      tgt="$tgt_dir/AGENTS.md"
+      backup_if_conflict "$tgt"
+      install -m 0644 "$REPO_DIR/agents/AGENTS.md" "$tgt"
+    done
+  fi
+
+  # A previous version of this script may have left a stale policy file here.
+  [[ -e "$HOME/.agents/AGENTS.md" ]] && rm -f "$HOME/.agents/AGENTS.md"
+
   echo "Done (copy mode)."
   exit 0
 fi
@@ -191,6 +214,7 @@ if [[ -d "$REPO_DIR/opencode" ]]; then
 fi
 
 # Stow agents (user-authored skills; opencode auto-loads from ~/.agents/skills/)
+# agents/.stow-local-ignore prevents AGENTS.md from being mapped into ~/.agents/
 if [[ -d "$REPO_DIR/agents" ]]; then
   echo "Stowing agents → ~/.agents"
   mkdir -p "$HOME/.agents"
@@ -201,6 +225,20 @@ if [[ -d "$REPO_DIR/agents" ]]; then
     echo "ERROR: Conflicts remain for agents. Resolve and re-run."
     exit 1
   fi
+fi
+
+# A previous version of this script may have left a stale policy file here.
+[[ -e "$HOME/.agents/AGENTS.md" ]] && rm -f "$HOME/.agents/AGENTS.md"
+
+# Expose the canonical harness-agnostic policy to each harness's expected path.
+if [[ -f "$REPO_DIR/agents/AGENTS.md" ]]; then
+  echo "Linking canonical AGENTS.md to harness paths"
+  for tgt_dir in "$HOME/.config/opencode" "$HOME/.codex"; do
+    mkdir -p "$tgt_dir"
+    tgt="$tgt_dir/AGENTS.md"
+    backup_if_conflict "$tgt"
+    ln -sfv "$REPO_DIR/agents/AGENTS.md" "$tgt"
+  done
 fi
 
 echo "Symlink setup complete."

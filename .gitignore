@@ -21,3 +21,5 @@ opencode/bun.lock
 opencode/.oh-my-opencode-slim/
 opencode/*.bak
 opencode/*.backup-*
+
+.slim/

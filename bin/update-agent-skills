@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Refresh upstream Agent Skills in this dotfiles repository.
+# This script only touches the repository; it never writes to home-directory
+# harness configuration and never runs stow or installers.
+
+REPO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+SKILLS_DIR="$REPO_DIR/agents/skills"
+TMP_BASE="${TMPDIR:-/tmp}/update-agent-skills-$$"
+
+MATT_REPO="https://github.com/mattpocock/skills"
+MATT_COMMIT="5b15a47f2d7150f545fbcacbfe381787fc0230dc"
+
+CURSOR_REPO="https://github.com/cursor/plugins"
+CURSOR_COMMIT="46125561306434d8a1d7745d540d8932ab0cd2a2"
+
+cleanup() { rm -rf "$TMP_BASE"; }
+trap cleanup EXIT
+
+log() { echo "[update-agent-skills] $*"; }
+
+clone_verify() {
+  local repo="$1" commit="$2" dest="$3"
+  git clone --depth=1 --quiet "$repo" "$dest"
+  local actual
+  actual=$(git -C "$dest" rev-parse HEAD)
+  if [[ "$actual" != "$commit" ]]; then
+    log "ERROR: $repo HEAD is $actual, expected $commit"
+    exit 1
+  fi
+}
+
+sync_skill() {
+  local src="$1" dst="$2"
+  if [[ ! -e "$src" ]]; then
+    log "ERROR: source missing: $src"
+    exit 1
+  fi
+  rm -rf "$dst"
+  mkdir -p "$dst"
+  cp -r "$src"/. "$dst"
+  log "updated $(basename "$dst")"
+}
+
+apply_local_adaptations() {
+  local patch="$REPO_DIR/run/patches/setup-matt-pocock-skills-AGENTS-preference.patch"
+  if [[ -f "$patch" ]]; then
+    log "applying local adaptation patch for setup-matt-pocock-skills"
+    if ! patch -d "$SKILLS_DIR/setup-matt-pocock-skills" -p0 --forward --dry-run -i "$patch" >/dev/null 2>&1; then
+      log "ERROR: local adaptation patch no longer applies; update $patch before refreshing"
+      exit 1
+    fi
+    patch -d "$SKILLS_DIR/setup-matt-pocock-skills" -p0 --forward -i "$patch"
+  fi
+}
+
+main() {
+  mkdir -p "$TMP_BASE"
+
+  local matt="$TMP_BASE/matt"
+  local cursor="$TMP_BASE/cursor"
+
+  log "cloning $MATT_REPO @ $MATT_COMMIT"
+  clone_verify "$MATT_REPO" "$MATT_COMMIT" "$matt"
+
+  log "cloning $CURSOR_REPO @ $CURSOR_COMMIT"
+  clone_verify "$CURSOR_REPO" "$CURSOR_COMMIT" "$cursor"
+
+  # Matt Pocock engineering skills
+  sync_skill "$matt/skills/engineering/tdd" "$SKILLS_DIR/tdd"
+  sync_skill "$matt/skills/engineering/diagnosing-bugs" "$SKILLS_DIR/diagnosing-bugs"
+  sync_skill "$matt/skills/engineering/codebase-design" "$SKILLS_DIR/codebase-design"
+  sync_skill "$matt/skills/engineering/domain-modeling" "$SKILLS_DIR/domain-modeling"
+  sync_skill "$matt/skills/engineering/code-review" "$SKILLS_DIR/code-review"
+  sync_skill "$matt/skills/engineering/improve-codebase-architecture" "$SKILLS_DIR/improve-codebase-architecture"
+  sync_skill "$matt/skills/engineering/grill-with-docs" "$SKILLS_DIR/grill-with-docs"
+  sync_skill "$matt/skills/productivity/grilling" "$SKILLS_DIR/grilling"
+  sync_skill "$matt/skills/engineering/setup-matt-pocock-skills" "$SKILLS_DIR/setup-matt-pocock-skills"
+  apply_local_adaptations
+
+  # pstack / cursor-team-kit skills
+  sync_skill "$cursor/pstack/skills/unslop" "$SKILLS_DIR/unslop"
+  sync_skill "$cursor/pstack/skills/typescript-best-practices" "$SKILLS_DIR/typescript-best-practices"
+  sync_skill "$cursor/pstack/skills/principle-type-system-discipline" "$SKILLS_DIR/principle-type-system-discipline"
+  sync_skill "$cursor/pstack/skills/principle-boundary-discipline" "$SKILLS_DIR/principle-boundary-discipline"
+  sync_skill "$cursor/cursor-team-kit/skills/deslop" "$SKILLS_DIR/deslop"
+  sync_skill "$cursor/cursor-team-kit/skills/thermo-nuclear-code-quality-review" "$SKILLS_DIR/thermo-nuclear-code-quality-review"
+
+  log "done. Review 'git status agents/skills' before committing."
+}
+
+main "$@"
