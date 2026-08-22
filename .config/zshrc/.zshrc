@@ -27,3 +27,6 @@ export PATH="$PATH:/home/d-a-soares/.local/bin"
 
 # oh-my-opencode-slim background subagents
 export OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true
+
+# opencode
+export PATH=/home/d-a-soares/.opencode/bin:$PATH
