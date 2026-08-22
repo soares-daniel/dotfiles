@@ -36,17 +36,52 @@ stow_pkg() {
   ( cd "$REPO_DIR" && mkdir -p "$target" && stow --target="$target" "$pkg" )
 }
 
+normalize_stow_links() {
+  local pkg="$1" target="$2"
+  local package_dir="$REPO_DIR/$pkg"
+  local source rel destination source_real destination_real relative
+
+  [[ -d "$package_dir" ]] || return 0
+
+  # Stow 2.3.1 can misclassify absolute links to the package as foreign when
+  # its package path is relative. Convert only links that resolve exactly to
+  # their repository source; leave unrelated links and real conflicts alone.
+  while IFS= read -r -d '' source; do
+    rel="${source#"$package_dir"/}"
+    [[ "$rel" != "$source" ]] || continue
+    destination="$target/$rel"
+    [[ -L "$destination" ]] || continue
+
+    source_real=$(realpath -e "$source" 2>/dev/null || true)
+    destination_real=$(readlink -f "$destination" 2>/dev/null || true)
+    [[ -n "$source_real" && "$source_real" == "$destination_real" ]] || continue
+
+    relative=$(realpath --relative-to="$(dirname "$destination")" "$source")
+    [[ "$(readlink "$destination")" == "$relative" ]] && continue
+
+    echo "Normalizing repository symlink: $destination"
+    ln -sfn "$relative" "$destination"
+  done < <(find "$package_dir" \( -type d -o -type f -o -type l \) -print0)
+}
+
 preflight_simulate() {
   local pkg="$1" target="$2"
-  echo "Preflight (simulate): stow --target=\"$target\" $pkg"
-  if ! ( cd "$REPO_DIR" && stow -n -v 1 --target="$target" "$pkg" ) | tee /tmp/stow_simulate.out; then
-    echo "ERROR: stow simulation failed."
-    return 1
-  fi
-  if grep -Eiq 'CONFLICT|would not be able to' /tmp/stow_simulate.out; then
-    echo "Detected conflicts in simulation. Resolve or let this script back up blockers."
+  local stow_status=0
+
+  echo "Preflight (read-only): stow --target=\"$target\" $pkg"
+  ( cd "$REPO_DIR" && stow -n -v 1 --target="$target" "$pkg" ) 2>&1 \
+    | tee /tmp/stow_simulate.out || stow_status=$?
+
+  if grep -Eiq 'CONFLICT|would not be able to|existing target (is neither|is not owned)' /tmp/stow_simulate.out; then
+    echo "Preflight found existing conflicts; no filesystem changes were made."
     return 2
   fi
+
+  if [[ "$stow_status" -ne 0 ]]; then
+    echo "ERROR: Stow preflight failed for a reason other than a recoverable conflict."
+    return 1
+  fi
+
   return 0
 }
 
@@ -62,6 +97,23 @@ backup_common_blockers_in_config() {
       mv -v "$p" "${p}.bak.$(date +%Y%m%d_%H%M%S)"
     fi
   done
+}
+
+backup_stow_file_conflicts() {
+  local pkg="$1" target="$2"
+  local package_dir="$REPO_DIR/$pkg"
+  local source rel destination
+
+  [[ -d "$package_dir" ]] || return 0
+
+  while IFS= read -r -d '' source; do
+    [[ -f "$source" || -L "$source" ]] || continue
+    rel="${source#"$package_dir"/}"
+    [[ "$rel" != "$source" ]] || continue
+    destination="$target/$rel"
+    [[ -f "$destination" && ! -L "$destination" ]] || continue
+    backup_if_conflict "$destination"
+  done < <(find "$package_dir" \( -type f -o -type l \) -print0)
 }
 
 echo "Dotfiles repo: $REPO_DIR"
@@ -133,6 +185,7 @@ if [[ -d "$REPO_DIR/.config" ]]; then
   mkdir -p "$HOME/.config"
 
   backup_common_blockers_in_config
+  normalize_stow_links ".config" "$HOME/.config"
 
   if preflight_simulate ".config" "$HOME/.config"; then
     stow_pkg ".config" "$HOME/.config"
@@ -179,12 +232,14 @@ done
 if [[ -d "$REPO_DIR/.local" ]]; then
   echo "Stowing .local → ~/.local"
   mkdir -p "$HOME/.local"
+  normalize_stow_links ".local" "$HOME/.local"
 
   # Preflight simulation and stow
   if preflight_simulate ".local" "$HOME/.local"; then
     stow_pkg ".local" "$HOME/.local"
   else
     echo "Attempting backup and retry for .local"
+    backup_stow_file_conflicts ".local" "$HOME/.local"
     if preflight_simulate ".local" "$HOME/.local"; then
       stow_pkg ".local" "$HOME/.local"
     else
@@ -204,12 +259,19 @@ fi
 if [[ -d "$REPO_DIR/opencode" ]]; then
   echo "Stowing opencode → ~/.config/opencode"
   mkdir -p "$HOME/.config/opencode"
+  normalize_stow_links "opencode" "$HOME/.config/opencode"
 
   if preflight_simulate "opencode" "$HOME/.config/opencode"; then
     stow_pkg "opencode" "$HOME/.config/opencode"
   else
-    echo "ERROR: Conflicts remain for opencode. Resolve and re-run."
-    exit 1
+    echo "Attempting backup and retry for opencode"
+    backup_stow_file_conflicts "opencode" "$HOME/.config/opencode"
+    if preflight_simulate "opencode" "$HOME/.config/opencode"; then
+      stow_pkg "opencode" "$HOME/.config/opencode"
+    else
+      echo "ERROR: Conflicts remain for opencode. Resolve and re-run."
+      exit 1
+    fi
   fi
 fi
 
@@ -218,6 +280,7 @@ fi
 if [[ -d "$REPO_DIR/agents" ]]; then
   echo "Stowing agents → ~/.agents"
   mkdir -p "$HOME/.agents"
+  normalize_stow_links "agents" "$HOME/.agents"
 
   if preflight_simulate "agents" "$HOME/.agents"; then
     stow_pkg "agents" "$HOME/.agents"

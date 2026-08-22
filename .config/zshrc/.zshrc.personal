@@ -1,24 +1,10 @@
 # ~/.zshrc.personal: Personal configuration
 
-# GO
-export GOPATH="$HOME/go"
-
-# Add GOPATH to PATH if not already there
-if [[ ":$PATH:" != *":$GOPATH/bin:"* ]]; then
-  export PATH="$GOPATH/bin:$PATH"
-fi
-
 # HTTP requests with xh!
 alias http="xh"
 
 # VI Mode!!!
 bindkey jj vi-cmd-mode
-
-# SDKMAN (via brew)
-if brew --prefix sdkman-cli >/dev/null 2>&1; then
-  export SDKMAN_DIR=$(brew --prefix sdkman-cli)/libexec
-  [[ -s "${SDKMAN_DIR}/bin/sdkman-init.sh" ]] && source "${SDKMAN_DIR}/bin/sdkman-init.sh"
-fi
 
 # Add JBang to environment
 alias j!=jbang
@@ -33,10 +19,14 @@ if [ -f "$HOME/.atuin/bin/env" ]; then
 fi
 
 # Zoxide
-eval "$(zoxide init zsh)"
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init zsh)"
+fi
 
 # Direnv
-eval "$(direnv hook zsh)"
+if command -v direnv >/dev/null 2>&1; then
+  eval "$(direnv hook zsh)"
+fi
 
 # Angular CLI autocompletion
 command -v ng >/dev/null 2>&1 && source <(ng completion script)

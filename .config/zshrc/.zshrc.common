@@ -28,6 +28,15 @@ elif [ -s "/usr/local/opt/nvm/nvm.sh" ]; then
   . "/usr/local/opt/nvm/nvm.sh"
 fi
 
+# SDKMAN (OS-agnostic loader)
+export SDKMAN_DIR="${SDKMAN_DIR:-$HOME/.sdkman}"
+if [[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]]; then
+  source "$SDKMAN_DIR/bin/sdkman-init.sh"
+elif command -v brew >/dev/null 2>&1 && brew --prefix sdkman-cli >/dev/null 2>&1; then
+  export SDKMAN_DIR="$(brew --prefix sdkman-cli)/libexec"
+  [[ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]] && source "$SDKMAN_DIR/bin/sdkman-init.sh"
+fi
+
 # Completion setup
 source <(kubectl completion zsh) 2>/dev/null || true
 complete -C '/usr/local/bin/aws_completer' aws 2>/dev/null || true
@@ -83,6 +92,23 @@ fv() { nvim "$(find . -type f -not -path '*/.*' | fzf)" }
 # XDG paths
 export XDG_CONFIG_HOME="$HOME/.config"
 export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
+
+# Go and Rust toolchains
+export GOPATH="${GOPATH:-$HOME/go}"
+if [[ -d "/usr/local/go/bin" ]]; then
+  export PATH="/usr/local/go/bin:$PATH"
+fi
+if [[ -d "$GOPATH/bin" ]]; then
+  export PATH="$GOPATH/bin:$PATH"
+fi
+if [[ -d "$HOME/.cargo/bin" ]]; then
+  export PATH="$HOME/.cargo/bin:$PATH"
+fi
+
+# Bun
+if [[ -d "$HOME/.bun/bin" ]]; then
+  export PATH="$HOME/.bun/bin:$PATH"
+fi
 
 # Dotfiles helpers
 alias cddotfiles="cd ~/code/dotfiles"
