@@ -117,8 +117,8 @@
 
     # --- History --- #
 
-    # Avoid timing out hidden notifications
-    sticky_history = yes
+    # Recalled notifications expire using their urgency timeout
+    sticky_history = no
 
     # Maximum amount of notifications kept in history
     history_length = 120
