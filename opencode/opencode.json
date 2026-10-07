@@ -10,5 +10,62 @@
     "general": {
       "disable": true
     }
+  },
+  "mcp": {
+    "outline": {
+      "type": "remote",
+      "url": "https://outline.homelab.me/mcp",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer {file:/home/d-a-soares/.config/opencode/.outline.token}"
+      }
+    },
+    "chrome-devtools": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ],
+      "enabled": true
+    },
+    "jira": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "mcp-atlassian",
+        "--env-file",
+        "/home/d-a-soares/.config/opencode/.jira.env"
+      ],
+      "enabled": true
+    },
+    "confluence": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "mcp-atlassian",
+        "--env-file",
+        "/home/d-a-soares/.config/opencode/.confluence.env"
+      ],
+      "enabled": true
+    },
+    "jenkins": {
+      "type": "local",
+      "command": [
+        "bash",
+        "-lc",
+        "set -a; source /home/d-a-soares/.config/opencode/.jenkins.env; set +a; exec uvx --with 'mcp>=1.28,<2' --with requests python /home/d-a-soares/softdev/code/ics2-ssa-dev-tools/jenkins-mcp/jenkins_mcp.py"
+      ],
+      "enabled": true
+    },
+    "bitbucket": {
+      "type": "local",
+      "command": [
+        "bash",
+        "-lc",
+        "set -a; source /home/d-a-soares/.config/opencode/.bitbucket.env; set +a; exec npx -y @nexus2520/bitbucket-mcp-server"
+      ],
+      "enabled": true
+    }
   }
 }
