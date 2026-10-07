@@ -16,12 +16,23 @@ while true; do
         continue
     fi
 
-    # Debounce: rapid-fire events often come in bursts.
-    sleep 1
+    # Debounce: rapid-fire events often come in bursts (e.g. 5 in 7s
+    # during a USB-C replug with DP-1 -> DP-2 port swap). Coalesce them
+    # so we restart kanshi once per burst instead of hitting
+    # systemd's start rate limiter (start-limit-hit).
+    sleep 3
 
+    # Recover a rate-limited kanshi. A burst of restarts can leave it in
+    # failed (start-limit-hit); active-check alone would then ignore it
+    # forever, leaving outputs on sway's fallback config.
+    if systemctl --user is-failed --quiet kanshi.service 2>/dev/null; then
+        systemctl --user reset-failed kanshi.service 2>/dev/null || true
+        systemctl --user start kanshi.service 2>/dev/null || true
     # Only restart kanshi when it is already running. If swayidle has
     # intentionally stopped it for DPMS, leave it stopped.
-    if systemctl --user is-active --quiet kanshi.service 2>/dev/null; then
+    elif systemctl --user is-active --quiet kanshi.service 2>/dev/null; then
+        # Clear the rate-limiter counter so a burst doesn't trip it.
+        systemctl --user reset-failed kanshi.service 2>/dev/null || true
         systemctl --user restart kanshi.service
     fi
 done
