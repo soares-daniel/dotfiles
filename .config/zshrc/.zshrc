@@ -30,3 +30,5 @@ export OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true
 
 # opencode
 export PATH=/home/d-a-soares/.opencode/bin:$PATH
+
+[ -f "/home/d-a-soares/.ssa/completion/ssa.zsh" ] && source "/home/d-a-soares/.ssa/completion/ssa.zsh" # SSA CLI completion

@@ -17,3 +17,5 @@ DOTFILES_CONTEXT="personal"
 
 alias cddatafactory="cd ~/softdev/code/ics2-ssa-data-factory"
 
+
+[ -f "/home/d-a-soares/.ssa/completion/ssa.bash" ] && source "/home/d-a-soares/.ssa/completion/ssa.bash" # SSA CLI completion
