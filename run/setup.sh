@@ -285,8 +285,14 @@ if [[ -d "$REPO_DIR/agents" ]]; then
   if preflight_simulate "agents" "$HOME/.agents"; then
     stow_pkg "agents" "$HOME/.agents"
   else
-    echo "ERROR: Conflicts remain for agents. Resolve and re-run."
-    exit 1
+    echo "Attempting backup and retry for agents"
+    backup_stow_file_conflicts "agents" "$HOME/.agents"
+    if preflight_simulate "agents" "$HOME/.agents"; then
+      stow_pkg "agents" "$HOME/.agents"
+    else
+      echo "ERROR: Conflicts remain for agents. Resolve and re‑run."
+      exit 1
+    fi
   fi
 fi
 
