@@ -24,7 +24,7 @@ dialect = "us"
 history_format = "{time} · {command}"
 
 # Keybindings
-# Ctrl+r opens the history search UI, up-arrow is left untouched
+# Ctrl+r and up-arrow open the history search UI
 keys = { search = "CtrlR" }
 
 # Secret key is auto-generated at ~/.local/share/atuin/login.shadow

@@ -139,5 +139,5 @@ export PATH="$PATH:$HOME/.local/bin"
 # Atuin (shell history)
 export PATH="$HOME/.atuin/bin:$PATH"
 if command -v atuin >/dev/null 2>&1; then
-  eval "$(atuin init zsh --disable-up-arrow)"
+  eval "$(atuin init zsh)"
 fi
