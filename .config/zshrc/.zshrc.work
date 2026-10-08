@@ -72,8 +72,28 @@ mvnwith() {
 }
 
 # Maven shortcuts
-alias mci='mvn clean install'
-alias mciskip='mvn clean install -DskipTests'
+unalias mci mciskip 2>/dev/null || :
+
+mci() {
+  local version="$1"
+  if [[ "$version" == <-> ]]; then
+    shift
+    mvnwith "$version" clean install "$@"
+  else
+    mvn clean install "$@"
+  fi
+}
+
+mciskip() {
+  local version="$1"
+  if [[ "$version" == <-> ]]; then
+    shift
+    mvnwith "$version" clean install -DskipTests "$@"
+  else
+    mvn clean install -DskipTests "$@"
+  fi
+}
+
 alias mci8='mvnwith 8 clean install'
 alias mci11='mvnwith 11 clean install'
 alias mci17='mvnwith 17 clean install'

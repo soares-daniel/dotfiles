@@ -77,25 +77,58 @@ usejava() {
     fi
   }
 
+mvnwith() {
+  local version="$1"
+  shift
+
+  local target previous_java
+  target=$(find "$SDKMAN_DIR/candidates/java" -mindepth 1 -maxdepth 1 -type d \
+    -printf "%f\n" | grep -E -m1 "^${version}(\.|$)")
+
+  if [ -z "$target" ]; then
+    echo "No matching Java version found for: $version"
+    return 1
+  fi
+
+  previous_java=$(readlink "$SDKMAN_DIR/candidates/java/current")
+  echo "Temporarily using Java $target"
+  sdk use java "$target" >/dev/null || return
+  java -version 2>&1 | head -n 1
+
+  local command_status
+  if "$@"; then
+    command_status=0
+  else
+    command_status=$?
+  fi
+
+  if [ -n "$previous_java" ]; then
+    sdk use java "$previous_java" >/dev/null || return
+    echo "Restored Java to $previous_java"
+  fi
+
+  return "$command_status"
+}
+
 mci() {
-  local ver="$1"
-  shift || true
+  local ver="${1:-}"
 
   if [[ "$ver" =~ ^[0-9]+$ ]]; then
-    usejava "$ver" mvn clean install "$@"
+    shift
+    mvnwith "$ver" mvn clean install "$@"
   else
-    mvn clean install "$ver" "$@"
+    mvn clean install "$@"
   fi
 }
 
 mciskip() {
-  local ver="$1"
-  shift || true
+  local ver="${1:-}"
 
   if [[ "$ver" =~ ^[0-9]+$ ]]; then
-    usejava "$ver" mvn clean install -DskipTests "$@"
+    shift
+    mvnwith "$ver" mvn clean install -DskipTests "$@"
   else
-    mvn clean install -DskipTests "$ver" "$@"
+    mvn clean install -DskipTests "$@"
   fi
 }
 
