@@ -122,7 +122,10 @@ stowdotfiles() {
 }
 
 # System Update Helper (OS-agnostic)
-alias update='update-all'
+update() {
+  update-all
+  type update_post >/dev/null 2>&1 && update_post
+}
 
 # Starship prompt
 eval "$(starship init zsh)"

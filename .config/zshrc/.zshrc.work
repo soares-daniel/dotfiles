@@ -74,6 +74,11 @@ mvnwith() {
 # Maven shortcuts
 unalias mci mciskip 2>/dev/null || :
 
+# Run work compliance checks after system updates (matches the Bash hook).
+update_post() {
+  alcs-compliance
+}
+
 mci() {
   local version="$1"
   if [[ "$version" == <-> ]]; then
