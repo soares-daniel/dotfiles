@@ -3,15 +3,59 @@
   "plugin": [
     "oh-my-opencode-slim"
   ],
+  "policies": [
+    {
+      "action": "provider.use",
+      "resource": "amazon-bedrock",
+      "effect": "deny"
+    }
+  ],
+  "small_model": "github-copilot/gpt-6-luna",
   "agent": {
     "explore": {
       "disable": true
     },
     "general": {
       "disable": true
+    },
+    "title": {
+      "model": "github-copilot/gpt-6-luna"
+    },
+    "summary": {
+      "model": "github-copilot/gpt-6-luna"
+    },
+    "compaction": {
+      "model": "github-copilot/gpt-6-luna"
+    }
+  },
+  "provider": {
+    "github-copilot": {
+      "models": {
+        "gpt-6.1-sol": {
+          "id": "gpt-6.1-sol",
+          "name": "GPT-6.1 Sol",
+          "limit": {
+            "context": 260000,
+            "output": 128000
+          }
+        },
+        "gpt-6-luna": {
+          "id": "gpt-6-luna",
+          "name": "GPT-6 Luna",
+          "limit": {
+            "context": 260000,
+            "output": 128000
+          }
+        }
+      }
     }
   },
   "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true
+    },
     "outline": {
       "type": "remote",
       "url": "https://outline.homelab.me/mcp",

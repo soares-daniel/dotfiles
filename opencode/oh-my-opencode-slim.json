@@ -1,6 +1,6 @@
   {
     "$schema": "https://unpkg.com/oh-my-opencode-slim@latest/oh-my-opencode-slim.schema.json",
-    "preset": "own",
+    "preset": "copilot",
     "presets": {
       "openai": {
         "orchestrator": {
@@ -157,6 +157,65 @@
         "observer": {
           "model": "muse-spark-1.3-contributor-free"
         }
+      },
+      "copilot": {
+        "orchestrator": {
+          "model": "github-copilot/gpt-6.1-sol",
+          "variant": "medium",
+          "skills": [
+            "*"
+          ],
+          "mcps": [
+            "*",
+            "!context7"
+          ]
+        },
+        "oracle": {
+          "model": "github-copilot/gpt-6.1-sol",
+          "variant": "medium",
+          "skills": [
+            "simplify"
+          ],
+          "mcps": []
+        },
+        "librarian": {
+          "model": "github-copilot/gpt-6-luna",
+          "variant": "low",
+          "skills": [],
+          "mcps": [
+            "context7",
+            "gh_grep"
+          ]
+        },
+        "explorer": {
+          "model": "github-copilot/gpt-6-luna",
+          "variant": "low",
+          "skills": [],
+          "mcps": [
+            "context7",
+            "gh_grep"
+          ]
+        },
+        "designer": {
+          "model": "github-copilot/gpt-6-luna",
+          "variant": "medium",
+          "skills": [],
+          "mcps": []
+        },
+        "fixer": {
+          "model": "github-copilot/gpt-6-luna",
+          "variant": "low",
+          "skills": [],
+          "mcps": []
+        },
+        "observer": {
+          "model": "github-copilot/gemini-3.8-flash",
+          "skills": [],
+          "mcps": []
+        }
       }
-    }
+  },
+  "webfetch": {
+    "model": "github-copilot/gpt-6-luna"
   }
+}
