@@ -58,7 +58,7 @@
     },
     "outline": {
       "type": "remote",
-      "url": "https://outline.homelab.me/mcp",
+      "url": "https://outline.sedam.me/mcp",
       "enabled": true,
       "headers": {
         "Authorization": "Bearer {file:/home/d-a-soares/.config/opencode/.outline.token}"
